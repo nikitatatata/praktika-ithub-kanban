@@ -46,18 +46,13 @@ def register(
 
     return res
 
-
-@app.post("/api/items/{item_id}")
-def login(item_id: int, q: str = None):
-    return {"item_id": item_id, "q": q}
-
 @app.post("/api/login")
-def log(
+def login(
     Email: str, 
     PasswordHash: str 
 ):
-    log_in = validate_User(Email, PasswordHash)
+    res = validate_User(Email, PasswordHash)
 
-    return log_in
+    return res
 
 app.mount("/", StaticFiles(directory="./frontend", html=True))
