@@ -30,7 +30,12 @@ class PostgresDB:
 
     def execute(self, query: str, params: tuple = None, fetch: bool = False):
         with self.conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
-            cur.execute(query, params)
+            try:
+                cur.execute(query, params)
+            except Exception as e:
+                self.conn.commit()
+                return e
+            self.conn.commit()
             if fetch:
                 return cur.fetchall()
             self.conn.commit()

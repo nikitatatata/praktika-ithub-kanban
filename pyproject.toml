@@ -1,0 +1,12 @@
+[project]
+name = "praktika-ithub-kanban"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standart]>=0.137.1",
+    "psycopg>=3.3.4",
+    "psycopg-binary>=3.3.4",
+    "psycopg2-binary>=2.9.12",
+]

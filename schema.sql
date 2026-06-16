@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS "public"."User" (
     "SurName" text NOT NULL,
     "LastName" text NOT NULL,
     "PassHash" text NOT NULL,
-    "Type" text NOT NULL,
     "Description" text NOT NULL,
     "Location" text NOT NULL
 );
@@ -32,6 +31,6 @@ CREATE TABLE IF NOT EXISTS "public"."Commissions" (
 );
 
 CREATE TABLE IF NOT EXISTS "public"."OwnedByUsers" (
-    "id" bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "id" bigint PRIMARY KEY,
     "AnimalID" bigint NOT NULL
 );

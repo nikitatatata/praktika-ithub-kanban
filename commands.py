@@ -1,7 +1,7 @@
 from db import PostgresDB
 
 db = PostgresDB(
-    dsn="postgresql://nik:qwe@localhost:5432/",
+    dsn="postgresql://root:123@127.0.0.1:5432/",
     schema_file="schema.sql"
 )
 
@@ -16,17 +16,20 @@ def add_User(
         Email: str, 
         PasswordHash: str, 
         Firstname: str, 
-        Surname: str, 
-        Type: str,
+        Surname: str,
         Lastname: str = "",
         Description: str = "",
         Location: str = ""
 ):
-    db.execute("""
-        INSERT INTO "public"."User" 
-        ("Email", "FirstName", "LastName", "Location", "PassHash", "SurName", "Type", "Description") 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (Email, Firstname, Lastname, Location, PasswordHash, Surname, Type, Description))
+    res = db.execute("""
+            INSERT INTO "public"."User" 
+            ("Email", "FirstName", "LastName", "Location", "PassHash", "SurName", "Description") 
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (Email, Firstname, Lastname, Location, PasswordHash, Surname, Description))
+    if res:
+        return False
+    return True
+
 
 def add_Animal(
         Type: str,
