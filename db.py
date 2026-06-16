@@ -1,33 +1,36 @@
 import psycopg
-from psycopg.rows import dict_row
+from pathlib import Path
 
 class PostgresDB:
-    def __init__(self, dsn: str):
+    def __init__(self, dsn: str, schema_file: str | None = None):
         self.dsn = dsn
+        self.schema_file = schema_file
         self.conn = None
+        
+        # Выполняется автоматически при создании экземпляра
+        self._connect_and_init()
 
-    def connect(self):
+    def _connect_and_init(self):
+        # 1. Синхронное подключение
         self.conn = psycopg.connect(self.dsn)
+        
+        # 2. Инициализация схемы, если файл указан и существует
+        if self.schema_file and Path(self.schema_file).exists():
+            self._init_schema()
+
+    def _init_schema(self):
+        query = Path(self.schema_file).read_text(encoding='utf-8')
+        with self.conn.cursor() as cur:
+            cur.execute(query)
+        self.conn.commit()
 
     def close(self):
         if self.conn and not self.conn.closed:
             self.conn.close()
 
     def execute(self, query: str, params: tuple = None, fetch: bool = False):
-        try:
-            # dict_row возвращает результаты в виде словарей, а не кортежей
-            with self.conn.cursor(row_factory=dict_row) as cur:
-                cur.execute(query, params)
-                if fetch:
-                    return cur.fetchall()
-                self.conn.commit()
-        except Exception as e:
-            self.conn.rollback()
-            raise RuntimeError(f"Ошибка БД: {e}")
-
-    def __enter__(self):
-        self.connect()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        with self.conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
+            cur.execute(query, params)
+            if fetch:
+                return cur.fetchall()
+            self.conn.commit()
