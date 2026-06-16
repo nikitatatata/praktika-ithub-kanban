@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Response, UploadFile, File, Form, Query
 from fastapi.staticfiles import StaticFiles
 from commands import *
+import shutil
+from pathlib import Path
 
 # add_User("teto@teto.teto", "3t62gd7d2387", "nik", "tar", "admin", "serg", "Касане тето", "Москва")
-print(validate_User("teto@teto.teto", "3t62gd7d2387"))
+# print(validate_User("teto@teto.teto", "3t62gd7d2387"))
 #add_Animal("Cat", "Siamese", "Barsik", "Very fluffy and friendly", 2, 5000, True)
 
 # # 1. Поиск всех животных без фильтров
@@ -28,31 +30,169 @@ print(validate_User("teto@teto.teto", "3t62gd7d2387"))
 
 app = FastAPI()
 
+# Создаем директорию для загрузок, если она не существует
+UPLOADS_DIR = Path("./frontend/uploads")
+UPLOADS_DIR.mkdir(exist_ok=True)
+
 @app.post("/api/items/{item_id}")
 def read_item(item_id: int, q: str = None):
     return {"item_id": item_id, "q": q}
 
 @app.post("/api/register")
 def register(
-    Email: str, 
-    PasswordHash: str, 
-    Firstname: str, 
-    Surname: str,
-    Lastname: str = "",
-    Description: str = "",
-    Location: str = ""
+    Email: str = Form(...), 
+    PasswordHash: str = Form(...), 
+    Firstname: str = Form(...), 
+    Surname: str = Form(...),
+    Lastname: str = Form(""),
+    Description: str = Form(""),
+    Location: str = Form("")
 ):
     res = add_User(Email, PasswordHash, Firstname, Surname, Lastname, Description, Location)
-
-    return res
+    if not res:
+        # 409 Conflict - ресурс уже существует (или другая ошибка БД)
+        return Response(content="false", status_code=409, media_type="application/json")
+    return True
 
 @app.post("/api/login")
 def login(
-    Email: str, 
-    PasswordHash: str 
+    Email: str = Form(...), 
+    PasswordHash: str = Form(...) 
 ):
     res = validate_User(Email, PasswordHash)
+    if not res:
+        # 403 Forbidden - доступ запрещен (неверные учетные данные)
+        return Response(content="false", status_code=403, media_type="application/json")
+    return True
+
+@app.get("/api/animal")
+def get_animal(
+    Type: str = None,
+    Breed: str = None,
+    Age: int = None,
+    Sterealized: bool = None,
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0)
+):
+    res = get_Animals(Type, Breed, Age, Sterealized, limit, offset)
 
     return res
+
+@app.post("/api/animal")
+async def create_animal(
+    Type: str = Form(...),
+    Breed: str = Form(...),
+    Name: str = Form(...),
+    Description: str = Form(...),
+    OrientatedAge: int = Form(...),
+    Cost: int = Form(...),
+    Sterealized: bool = Form(...),
+    image: UploadFile = File(...),
+    Email: str = Form(...),
+    PasswordHash: str = Form(...)
+):
+    # 1. Валидация пользователя
+    user_id = get_User_by_auth(Email, PasswordHash)
+    if not user_id:
+        return Response(content='{"error": "Unauthorized"}', status_code=403, media_type="application/json")
+
+    # Генерируем безопасный путь к файлу
+    file_path = UPLOADS_DIR / image.filename
+    
+    # Сохраняем файл на диск
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(image.file, buffer)
+        
+    # Путь для сохранения в БД и доступа с фронтенда
+    image_path_for_db = f"/uploads/{image.filename}"
+
+    # Добавляем запись о животном в базу данных, проверяя на дубликаты
+    result = add_Animal(Type, Breed, Name, Description, OrientatedAge, Cost, Sterealized, image_path_for_db, user_id)
+    
+    if not result:
+        return Response(content='{"error": "Animal with this name already exists"}', status_code=409, media_type="application/json")
+
+    # Возвращаем успешный ответ, если животное было создано
+    return {"message": "Animal created successfully", "image_path": image_path_for_db}
+
+@app.get("/api/user/{user_id}/animals")
+def get_user_animals(user_id: int, limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
+    return get_Animals_by_User(user_id, limit, offset)
+
+
+@app.get("/api/animal/{animal_id}")
+def get_single_animal(animal_id: int):
+    animal = get_Animal_by_id(animal_id)
+    if not animal:
+        return Response(status_code=404, content='{"error": "Animal not found"}', media_type="application/json")
+    return animal
+
+@app.get("/api/user/{user_id}")
+def get_user_profile(user_id: int):
+    user = get_User_by_id(user_id)
+    if not user:
+        return Response(status_code=404, content='{"error": "User not found"}', media_type="application/json")
+    return user
+
+@app.delete("/api/animal/{animal_id}")
+def delete_animal(
+    animal_id: int,
+    Email: str = Form(...),
+    PasswordHash: str = Form(...)
+):
+    user_id = get_User_by_auth(Email, PasswordHash)
+    if not user_id:
+        return Response(content='{"error": "Unauthorized"}', status_code=403, media_type="application/json")
+        
+    status = delete_Animal(animal_id, user_id)
+    if status == 404:
+        return Response(status_code=404, content='{"error": "Animal not found"}', media_type="application/json")
+    elif status == 403:
+        return Response(status_code=403, content='{"error": "Forbidden: You do not own this animal"}', media_type="application/json")
+    
+    return Response(status_code=204)
+
+@app.post("/api/fundraiser")
+def create_new_fundraiser(
+    TargetAmount: int = Form(...),
+    Description: str = Form(...),
+    AnimalID: int = Form(None),
+    Email: str = Form(...),
+    PasswordHash: str = Form(...)
+):
+    user_id = get_User_by_auth(Email, PasswordHash)
+    if not user_id:
+        return Response(content='{"error": "Unauthorized"}', status_code=403, media_type="application/json")
+
+    fundraiser = create_fundraiser(user_id, TargetAmount, Description, AnimalID)
+    if not fundraiser:
+        return Response(content='{"error": "Failed to create fundraiser"}', status_code=500, media_type="application/json")
+    
+    return fundraiser
+
+@app.get("/api/fundraisers")
+def list_fundraisers(limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
+    return get_fundraisers(True, limit, offset)
+
+@app.post("/api/fundraiser/{fundraiser_id}/donate")
+def donate_to_fundraiser(
+    fundraiser_id: int,
+    Amount: int = Form(...),
+    Email: str = Form(...),
+    PasswordHash: str = Form(...)
+):
+    donator_id = get_User_by_auth(Email, PasswordHash)
+    if not donator_id:
+        return Response(content='{"error": "Unauthorized"}', status_code=403, media_type="application/json")
+
+    success = make_donation(donator_id, fundraiser_id, Amount)
+    if not success:
+        return Response(content='{"error": "Donation failed or fundraiser not found/inactive"}', status_code=400, media_type="application/json")
+        
+    return {"message": "Donation successful"}
+
+@app.get("/api/user/{user_id}/donations")
+def get_user_donations(user_id: int, limit: int = Query(20, ge=1, le=100), offset: int = Query(0, ge=0)):
+    return get_donations_by_user(user_id, limit, offset)
 
 app.mount("/", StaticFiles(directory="./frontend", html=True))

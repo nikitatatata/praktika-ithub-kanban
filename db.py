@@ -32,10 +32,10 @@ class PostgresDB:
         with self.conn.cursor(row_factory=psycopg.rows.dict_row) as cur:
             try:
                 cur.execute(query, params)
-            except Exception as e:
                 self.conn.commit()
+                if fetch:
+                    return cur.fetchall()
+                return None # Возвращаем None при успешной операции записи (INSERT, UPDATE)
+            except Exception as e:
+                self.conn.rollback() # Откатываем транзакцию в случае ошибки
                 return e
-            self.conn.commit()
-            if fetch:
-                return cur.fetchall()
-            self.conn.commit()
