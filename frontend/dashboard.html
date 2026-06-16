@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЛапаДом | Личный кабинет</title>
+    <title>Лапы, крылья и хвосты | Личный кабинет</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -11,19 +11,11 @@
     <div class="dashboard-container">
         <!-- Боковое меню -->
         <aside class="sidebar">
-            <div class="sidebar-header">
+            <a href="index.html" class="sidebar-header">
                 <i class="fa-solid fa-paw"></i>
-                <span>ЛапаДом</span>
-            </div>
+                <span>Лапы, крылья и хвосты</span>
+            </a>
             
-            <div class="role-selector">
-                <label>Демо: Ваша роль</label>
-                <select id="roleSelector" onchange="switchRole(this.value)">
-                    <option value="user">👤 Пользователь</option>
-                    <option value="partner">🏢 Партнёр (Приют/Клиника)</option>
-                </select>
-            </div>
-
             <nav class="sidebar-nav" id="sidebarNav">
                 <!-- Меню генерируется через JS -->
             </nav>
@@ -36,6 +28,9 @@
                         <div class="user-role" id="userRole">Пользователь</div>
                     </div>
                 </div>
+                <a href="index.html" class="btn btn-outline" style="margin-top: 1rem; width: 100%; text-align: center; text-decoration: none;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Выйти
+                </a>
             </div>
         </aside>
 
@@ -49,7 +44,7 @@
                         <span class="badge">3</span>
                     </button>
                     <button class="btn btn-primary" onclick="showQuickAction()">
-                        <i class="fa-solid fa-plus"></i> Быстрое действие
+                        <i class="fa-solid fa-plus"></i> Разместить
                     </button>
                 </div>
             </header>
@@ -61,5 +56,13 @@
     </div>
 
     <script src="js/dashboard.js"></script>
+
+    <!-- Модальное окно детальной карточки животного -->
+<div id="animalDetailModal" class="modal-overlay">
+    <div class="modal-content" id="animalDetailModalContent">
+        <!-- Контент генерируется через JS -->
+    </div>
+</div>
+
 </body>
 </html>

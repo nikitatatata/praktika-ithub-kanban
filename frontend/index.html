@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ЛапаДом — Найди друга</title>
+    <title>Лапы, крылья и хвосты — Помогаем животным вместе</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -11,15 +11,15 @@
     <!-- Навигация -->
     <nav class="navbar">
         <div class="container nav-container">
-            <div class="logo">
+            <a href="index.html" class="logo">
                 <i class="fa-solid fa-paw"></i>
-                <span>ЛапаДом</span>
-            </div>
+                <span>Лапы, крылья и хвосты</span>
+            </a>
             <div class="nav-links">
                 <a href="#home" class="active">Главная</a>
-                <a href="#animals">Питомцы</a>
+                <a href="#animals">Животные</a>
+                <a href="#how-it-works">Как это работает</a>
                 <a href="#about">О нас</a>
-                <a href="#contacts">Контакты</a>
             </div>
             <div class="nav-actions">
                 <a href="dashboard.html" class="btn btn-outline">Войти</a>
@@ -32,30 +32,78 @@
     <header class="hero" id="home">
         <div class="container">
             <div class="hero-content">
-                <h1>Подари дом тому, кто ждет</h1>
-                <p>Тысячи животных ищут любящих хозяев. Вы можете изменить чью-то жизнь уже сегодня.</p>
+                <h1>Помогаем животным вместе</h1>
+                <p>Найдите нового друга, помогите животному найти дом или поддержите сбор средств на лечение. Здесь каждый может сделать доброе дело!</p>
                 <div class="hero-buttons">
-                    <a href="#animals" class="btn btn-primary btn-lg">Найти друга</a>
-                    <a href="#donate" class="btn btn-secondary btn-lg">Помочь финансово</a>
+                    <a href="#animals" class="btn btn-primary btn-lg">Найти питомца</a>
+                    <a href="dashboard.html" class="btn btn-secondary btn-lg">Разместить объявление</a>
                 </div>
             </div>
         </div>
     </header>
 
+    <!-- Как это работает -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">Как это работает</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <h3>Ищите животных</h3>
+                    <p>Найдите питомца по параметрам: вид, возраст, порода, местоположение</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-house-chimney"></i>
+                    </div>
+                    <h3>Забирайте домой</h3>
+                    <p>Свяжитесь с владельцем и заберите животное бесплатно или купите</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-hand-holding-dollar"></i>
+                    </div>
+                    <h3>Помогайте финансово</h3>
+                    <p>Поддержите сборы на лечение или помогите приюту кормом и медикаментами</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </div>
+                    <h3>Размещайте объявления</h3>
+                    <p>Найдите дом для животного: отдайте даром, продайте или создайте сбор средств</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Поиск и фильтрация -->
     <section class="search-section">
         <div class="container">
+            <h2 class="section-title">Найдите своего друга</h2>
             <div class="search-box">
                 <select id="animalType" class="form-control">
                     <option value="">Все виды</option>
                     <option value="dog">Собаки</option>
                     <option value="cat">Кошки</option>
+                    <option value="bird">Птицы</option>
+                    <option value="rodent">Грызуны</option>
+                    <option value="other">Другие</option>
+                </select>
+                <select id="animalPurpose" class="form-control">
+                    <option value="">Цель</option>
+                    <option value="free">Отдам даром</option>
+                    <option value="sale">Продам</option>
+                    <option value="fundraising">Сбор средств</option>
                 </select>
                 <select id="animalAge" class="form-control">
                     <option value="">Любой возраст</option>
-                    <option value="baby">Щенок/Котенок</option>
+                    <option value="baby">Щенок/Котёнок</option>
                     <option value="young">Молодой</option>
                     <option value="adult">Взрослый</option>
+                    <option value="senior">Пожилой</option>
                 </select>
                 <select id="animalGender" class="form-control">
                     <option value="">Любой пол</option>
@@ -72,7 +120,7 @@
     <!-- Каталог животных -->
     <section class="animals-section" id="animals">
         <div class="container">
-            <h2 class="section-title">Они ищут дом прямо сейчас</h2>
+            <h2 class="section-title">Животные ищут дом</h2>
             <div id="animalsGrid" class="animals-grid">
                 <!-- Карточки будут добавлены через JS -->
             </div>
@@ -80,16 +128,16 @@
     </section>
 
     <!-- Футер -->
-    <footer class="footer" id="contacts">
+    <footer class="footer" id="about">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h3>ЛапаДом</h3>
-                    <p>Мы соединяем сердца людей и лапы животных. Вместе мы можем сделать мир добрее.</p>
+                    <h3>Лапы, крылья и хвосты</h3>
+                    <p>Платформа для тех, кто любит животных. Помогаем найти дом, поддержку и заботу каждому питомцу.</p>
                 </div>
                 <div class="footer-col">
                     <h3>Контакты</h3>
-                    <p><i class="fa-solid fa-envelope"></i> help@lapadom.ru</p>
+                    <p><i class="fa-solid fa-envelope"></i> help@paws-wings-tails.ru</p>
                     <p><i class="fa-solid fa-phone"></i> +7 (999) 123-45-67</p>
                 </div>
                 <div class="footer-col">
@@ -97,12 +145,23 @@
                     <div class="social-links">
                         <a href="#"><i class="fa-brands fa-telegram"></i></a>
                         <a href="#"><i class="fa-brands fa-vk"></i></a>
+                        <a href="#"><i class="fa-brands fa-youtube"></i></a>
                     </div>
                 </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Лапы, крылья и хвосты. Все права защищены.</p>
             </div>
         </div>
     </footer>
 
     <script src="js/app.js"></script>
+    
+    <!-- Модальное окно детальной карточки животного -->
+<div id="animalModal" class="modal-overlay">
+    <div class="modal-content" id="animalModalContent">
+        <!-- Контент генерируется через JS -->
+    </div>
+</div>
 </body>
 </html>
