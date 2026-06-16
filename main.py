@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-import psycopg2
 from db import PostgresDB
+from contextlib import asynccontextmanager
+
+# 1. Создаем экземпляр, сразу указывая файл со схемой
+db = PostgresDB(
+    dsn="postgresql://nik:qwe@localhost:5432/",
+    schema_file="schema.sql"
+)
 
 app = FastAPI()
 
