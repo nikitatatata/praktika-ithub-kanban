@@ -210,4 +210,81 @@
                                 <i class="fa-solid fa-heart mr-1"></i> Забрать
                             </button>
                             <button onclick="openModal('donateModal')" class="flex-1 border border-primary text-primary py-2 rounded-lg hover:bg-primary hover:text-white transition font-medium">
-                                <i class="fa-solid fa-r
+                                <i class="fa-solid fa-ruble-sign mr-1"></i> Помочь
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Управление модальными окнами
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Специфичные функции для модалок
+        function openAdoptModal(animalName) {
+            document.getElementById('adoptAnimalName').innerText = `Питомец: ${animalName}`;
+            openModal('adoptModal');
+        }
+
+        function setAmount(amount) {
+            document.getElementById('donateAmount').value = amount;
+        }
+
+        // Имитация отправки форм (здесь будет fetch/axios запрос к вашему бэкенду)
+        function handleAddAnimal(e) {
+            e.preventDefault();
+            alert('✅ Заявка на добавление животного отправлена! (Здесь будет POST запрос к API)');
+            closeModal('addAnimalModal');
+            e.target.reset();
+        }
+
+        function handleAdopt(e) {
+            e.preventDefault();
+            alert('✅ Ваша заявка на усыновление успешно отправлена! Приют свяжется с вами.');
+            closeModal('adoptModal');
+            e.target.reset();
+        }
+
+        function handleDonate(e) {
+            e.preventDefault();
+            const amount = document.getElementById('donateAmount').value;
+            alert(`✅ Спасибо за ваше пожертвование в размере ${amount} ₽! (Здесь будет интеграция с платежным шлюзом)`);
+            closeModal('donateModal');
+            e.target.reset();
+        }
+
+        // Имитация фильтрации
+        function filterAnimals() {
+            // В реальности здесь будет сбор данных из select и GET запрос к API
+            alert('🔍 Фильтрация запущена! (Здесь будет GET запрос с параметрами к API)');
+        }
+
+        // Смена роли (для демонстрации разного UI)
+        function changeRole(role) {
+            currentRole = role;
+            const addBtn = document.querySelector('a[onclick="openModal(\'addAnimalModal\')"]');
+            if (role === 'user') {
+                addBtn.classList.add('hidden'); // Пользователь не может добавлять животных
+            } else {
+                addBtn.classList.remove('hidden'); // Волонтер и приют могут
+            }
+            alert(`Роль изменена на: ${role === 'shelter' ? 'Приют' : role === 'volunteer' ? 'Волонтёр' : 'Пользователь'}`);
+        }
+
+        // Закрытие модалки по клику вне её
+        window.onclick = function(event) {
+            if (event.target.classList.contains('fixed')) {
+                event.target.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
