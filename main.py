@@ -1,13 +1,31 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from db import PostgresDB
 from contextlib import asynccontextmanager
+from commands import *
 
-# 1. Создаем экземпляр, сразу указывая файл со схемой
-db = PostgresDB(
-    dsn="postgresql://nik:qwe@localhost:5432/",
-    schema_file="schema.sql"
-)
+#add_User("teto@teto.teto", "3t62gd7d2387", "nik", "tar", "admin", "serg", "Касане тето", "Москва")
+#print(validate_User("teto@teto.teto", "3t62gd7d2387"))
+#add_Animal("Cat", "Siamese", "Barsik", "Very fluffy and friendly", 2, 5000, True)
+
+# # 1. Поиск всех животных без фильтров
+# all_animals = get_Animals()
+# print("Все животные:", all_animals)
+
+# # 2. Поиск только по типу животного (например, ищем только котов)
+# only_cats = get_Animals(Type="Cat")
+# print("Все коты:", only_cats)
+
+# # 3. Поиск по типу и породе (например, сиамские коты)
+# siamese_cats = get_Animals(Type="Cat", Breed="Siamese")
+# print("Сиамские коты:", siamese_cats)
+
+# # 4. Поиск по возрасту и стерильности (например, ищем всех стерилизованных животных возраста 2 года)
+# adult_sterilized = get_Animals(Age=2, Sterealized=True)
+# print("Стерилизованные 2-х летние животные:", adult_sterilized)
+
+# # 5. Поиск по всем доступным параметрам
+# specific_search = get_Animals(Type="Dog", Breed="Corgi", Age=1, Sterealized=False)
+# print("Точный поиск:", specific_search)
 
 app = FastAPI()
 
