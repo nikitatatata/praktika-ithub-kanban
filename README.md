@@ -5,7 +5,7 @@
 ``` python
 python -m virtualenv .venv
 # Активируйте venv
-pip install -r requirements.txt
+pip install fastapi[standard] psycopg-binary psycopg2-binary psycopg
 ```
 ### Запуск сервера
 ``` bash
