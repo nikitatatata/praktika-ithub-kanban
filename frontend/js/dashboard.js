@@ -20,14 +20,19 @@ async function loadUserProfile(forceRefresh = false) {
         
         // Если forceRefresh = true, всегда загружаем с сервера
         if (forceRefresh) {
+            console.log('Принудительная загрузка профиля с сервера...');
             profile = await API.User.getProfile(credentials.userId);
             API.storage.setUserData(profile);
+            console.log('Профиль загружен с сервера:', profile);
         } else {
             // Иначе пробуем из кеша
             profile = API.storage.getUserData();
             if (!profile || profile.id !== credentials.userId) {
+                console.log('Кеш устарел, загружаем с сервера...');
                 profile = await API.User.getProfile(credentials.userId);
                 API.storage.setUserData(profile);
+            } else {
+                console.log('Используем данные из кеша:', profile);
             }
         }
         
@@ -38,8 +43,6 @@ async function loadUserProfile(forceRefresh = false) {
         // Обновляем аватар (инициалы)
         const initials = (profile.FirstName?.[0] || '') + (profile.Surname?.[0] || '');
         document.getElementById('userAvatar').textContent = initials || 'П';
-        
-        console.log('Профиль загружен:', profile);
         
     } catch (error) {
         console.error('Error loading profile:', error);
@@ -448,25 +451,33 @@ async function renderContent(tabId) {
     e.preventDefault();
     
     const btn = e.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сохранение...';
     
     try {
-        await API.User.updateProfile({
-            firstname: document.getElementById('profileFirstname').value,
-            surname: document.getElementById('profileSurname').value,
-            phone: document.getElementById('profilePhone').value,
-            location: document.getElementById('profileLocation').value,
-            description: document.getElementById('profileDescription').value
-        });
+        const updateData = {
+            firstname: document.getElementById('profileFirstname').value.trim(),
+            surname: document.getElementById('profileSurname').value.trim(),
+            phone: document.getElementById('profilePhone').value.trim(),
+            location: document.getElementById('profileLocation').value.trim(),
+            description: document.getElementById('profileDescription').value.trim()
+        };
         
-        alert('Профиль успешно обновлён!');
+        console.log('Отправляем данные:', updateData);
+        
+        await API.User.updateProfile(updateData);
+        
+        console.log('Профиль обновлён, загружаем свежие данные...');
         
         // Принудительно перезагружаем профиль с сервера
         await loadUserProfile(true);
         
-        // Обновляем поля формы новыми данными
+        // Получаем обновлённые данные из localStorage
         const profile = API.storage.getUserData();
+        console.log('Обновлённый профиль:', profile);
+        
+        // Обновляем поля формы новыми данными
         if (profile) {
             document.getElementById('profileFirstname').value = profile.FirstName || '';
             document.getElementById('profileSurname').value = profile.Surname || '';
@@ -475,13 +486,16 @@ async function renderContent(tabId) {
             document.getElementById('profileDescription').value = profile.Description || '';
         }
         
+        alert('✓ Профиль успешно обновлён!');
+        
     } catch (error) {
+        console.error('Ошибка обновления:', error);
         alert('Ошибка: ' + error.message);
     }
     
     btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-save"></i> Сохранить изменения';
-    });
+    btn.innerHTML = originalText;
+});
     }
 
         else if (tabId === 'my-donations') {
