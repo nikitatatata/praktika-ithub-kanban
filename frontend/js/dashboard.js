@@ -523,51 +523,64 @@ async function renderMyDonations(content, userId) {
 
 async function renderSearch(content) {
     console.log(' Загрузка поиска...');
-    const animals = await API.Animal.search({ limit: 20 });
     
-    content.innerHTML = `
-        <div class="card">
-            <h2 class="card-title">Поиск животных</h2>
-            <div class="search-box" style="margin-bottom: 2rem;">
-                <select id="searchType" class="form-control">
-                    <option value="">Все виды</option>
-                    <option value="Cat">Кошки</option>
-                    <option value="Dog">Собаки</option>
-                    <option value="Bird">Птицы</option>
-                </select>
-                <select id="searchBreed" class="form-control">
-                    <option value="">Все породы</option>
-                </select>
-                <button onclick="searchAnimals()" class="btn btn-primary">
-                    <i class="fa-solid fa-search"></i> Искать
-                </button>
-            </div>
+    try {
+        const response = await fetch('/api/animal?limit=20');
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки');
+        }
+        
+        const animals = await response.json();
+        const animalsList = Array.isArray(animals) ? animals : [];
+        
+        content.innerHTML = `
+            <div class="card">
+                <h2 class="card-title">Поиск животных</h2>
+                <div class="search-box" style="margin-bottom: 2rem;">
+                    <select id="searchType" class="form-control">
+                        <option value="">Все виды</option>
+                        <option value="Cat">Кошки</option>
+                        <option value="Dog">Собаки</option>
+                        <option value="Bird">Птицы</option>
+                    </select>
+                    <select id="searchBreed" class="form-control">
+                        <option value="">Все породы</option>
+                    </select>
+                    <button onclick="searchAnimals()" class="btn btn-primary">
+                        <i class="fa-solid fa-search"></i> Искать
+                    </button>
+                </div>
 
-            <div id="searchResults" class="animals-grid">
-                ${animals.length > 0 ? animals.map(animal => `
-                    <div class="animal-card">
-                        <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image">
-                        <div class="animal-info">
-                            <div class="animal-header">
-                                <h3 class="animal-name">${animal.Name}</h3>
-                                <span class="animal-badge">${animal.Type}</span>
-                            </div>
-                            <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
-                            <p class="animal-desc">${animal.Description}</p>
-                            <div class="animal-actions">
-                                <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
-                                    <i class="fa-solid fa-circle-info"></i> Подробнее
-                                </button>
-                                <button class="btn-donate" onclick="toggleFavoriteBtn(this, ${animal.id})">
-                                    <i class="fa-regular fa-heart"></i>
-                                </button>
+                <div id="searchResults" class="animals-grid">
+                    ${animalsList.length > 0 ? animalsList.map(animal => `
+                        <div class="animal-card">
+                            <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image">
+                            <div class="animal-info">
+                                <div class="animal-header">
+                                    <h3 class="animal-name">${animal.Name}</h3>
+                                    <span class="animal-badge">${animal.Type}</span>
+                                </div>
+                                <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
+                                <p class="animal-desc">${animal.Description}</p>
+                                <div class="animal-actions">
+                                    <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
+                                        <i class="fa-solid fa-circle-info"></i> Подробнее
+                                    </button>
+                                    <button class="btn-donate" onclick="toggleFavoriteBtn(this, ${animal.id})">
+                                        <i class="fa-regular fa-heart"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Животные не найдены</p>'}
+                    `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Животные не найдены</p>'}
+                </div>
             </div>
-        </div>
-    `;
+        `;
+    } catch (error) {
+        console.error('❌ Ошибка поиска:', error);
+        content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
+    }
 }
 
 // ==================== ВКЛАДКА: ПРОФИЛЬ ====================

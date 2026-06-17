@@ -9,6 +9,7 @@
 </head>
 <body>
     <!-- Навигация -->
+<!-- Навигация -->
 <nav class="navbar">
     <div class="container nav-container">
         <a href="index.html" class="logo">
@@ -23,9 +24,8 @@
             <a href="#about">О нас</a>
         </div>
         
-        <div class="nav-actions">
-            <a href="login.html" class="btn btn-outline">Войти</a>
-            <a href="register.html" class="btn btn-primary">Регистрация</a>
+        <div class="nav-actions" id="navActions">
+            <!-- Заполняется через JS в зависимости от авторизации -->
         </div>
         
         <button class="burger-menu" id="burgerMenu" onclick="toggleMobileNav()">
@@ -41,8 +41,9 @@
         <a href="#animals" onclick="closeMobileNav()">Животные</a>
         <a href="#how-it-works" onclick="closeMobileNav()">Как это работает</a>
         <a href="#about" onclick="closeMobileNav()">О нас</a>
-        <a href="dashboard.html" class="btn btn-outline">Войти</a>
-        <a href="dashboard.html" class="btn btn-primary">Регистрация</a>
+        <div id="mobileNavActions">
+            <!-- Заполняется через JS -->
+        </div>
     </div>
 </nav>
 
@@ -234,8 +235,7 @@
         </div>
     </footer>
 
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
+    
     
     <!-- Модальное окно детальной карточки животного -->
 <div id="animalModal" class="modal-overlay">
@@ -243,5 +243,8 @@
         <!-- Контент генерируется через JS -->
     </div>
 </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

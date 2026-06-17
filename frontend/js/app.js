@@ -1,8 +1,9 @@
-// Состояние приложения
+// ==================== ГЛАВНАЯ СТРАНИЦА (без авторизации) ====================
+
 let currentAnimals = [];
 let currentSort = 'newest';
 
-// Загрузка животных с API
+// Загрузка животных с API (доступна всем)
 async function loadAnimals(params = {}) {
     const grid = document.getElementById('animalsGrid');
     if (!grid) return;
@@ -10,12 +11,34 @@ async function loadAnimals(params = {}) {
     grid.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
     
     try {
-        const animals = await API.Animal.search({ ...params, limit: 100 });
-        currentAnimals = animals;
+        // Публичный endpoint - не требует авторизации
+        const queryParams = new URLSearchParams();
+        
+        if (params.type) queryParams.append('Type', params.type);
+        if (params.breed) queryParams.append('Breed', params.breed);
+        if (params.age) queryParams.append('Age', params.age);
+        if (params.sterealized !== undefined) {
+            queryParams.append('Sterealized', params.sterealized);
+        }
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.offset !== undefined) queryParams.append('offset', params.offset);
+        
+        const queryString = queryParams.toString();
+        const endpoint = queryString ? `/api/animal?${queryString}` : '/api/animal';
+        
+        const response = await fetch(endpoint);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const animals = await response.json();
+        currentAnimals = Array.isArray(animals) ? animals : [];
+        console.log(' Загружено животных:', currentAnimals.length);
         applySorting();
     } catch (error) {
+        console.error('❌ Ошибка загрузки животных:', error);
         grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки животных</p>';
-        console.error(error);
     }
 }
 
@@ -28,7 +51,6 @@ function applySorting() {
     
     switch (currentSort) {
         case 'newest':
-            // По умолчанию (как пришло с сервера)
             break;
         case 'oldest':
             sorted.reverse();
@@ -104,10 +126,9 @@ function renderAnimals(animals) {
 
 // Фильтрация животных
 function filterAnimals() {
-    const type = document.getElementById('animalType').value;
-    const purpose = document.getElementById('animalPurpose').value;
-    const age = document.getElementById('animalAge').value;
-    const gender = document.getElementById('animalGender').value;
+    const type = document.getElementById('animalType')?.value;
+    const purpose = document.getElementById('animalPurpose')?.value;
+    const age = document.getElementById('animalAge')?.value;
     
     const params = {};
     if (type) params.type = type;
@@ -115,7 +136,10 @@ function filterAnimals() {
     
     loadAnimals(params);
     
-    document.getElementById('animals').scrollIntoView({ behavior: 'smooth' });
+    const animalsSection = document.getElementById('animals');
+    if (animalsSection) {
+        animalsSection.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 // Открытие детальной карточки
@@ -123,31 +147,27 @@ async function openAnimalModal(animalId) {
     const modal = document.getElementById('animalModal');
     const modalContent = document.getElementById('animalModalContent');
     
+    if (!modal || !modalContent) {
+        alert('Ошибка: модальное окно не найдено');
+        return;
+    }
+    
     modalContent.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
     
     try {
-        const animal = await API.Animal.getById(animalId);
+        const response = await fetch(`/api/animal/${animalId}`);
+        
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить данные');
+        }
+        
+        const animal = await response.json();
         
         const purposeHtml = animal.Cost > 0 
             ? `<span class="purpose-badge purpose-sale" style="font-size: 1rem; padding: 0.5rem 1rem;">${animal.Cost} ₽</span>`
             : '<span class="purpose-badge purpose-free" style="font-size: 1rem; padding: 0.5rem 1rem;">Отдам даром</span>';
-        
-        // Кнопка перехода к владельцу
-        const ownerId = animal.OwnerID || animal.UserID;
-        const ownerButton = ownerId 
-            ? `<a href="profile.html?id=${ownerId}" class="owner-card">
-                    <div class="owner-info">
-                        <div class="owner-avatar">?</div>
-                        <div class="owner-details">
-                            <h4>Перейти к профилю владельца</h4>
-                            <p>Посмотреть другие объявления</p>
-                        </div>
-                        <i class="fa-solid fa-arrow-right" style="color: var(--primary);"></i>
-                    </div>
-               </a>`
-            : '';
         
         modalContent.innerHTML = `
             <button class="modal-close" onclick="closeAnimalModal()">
@@ -195,8 +215,6 @@ async function openAnimalModal(animalId) {
                         </div>
                     </div>
 
-                    ${ownerButton}
-
                     <div class="animal-detail-actions">
                         <button class="btn-detail-primary" onclick="handleAdoptRequest('${animal.Name}')">
                             <i class="fa-solid fa-hand-holding-heart"></i> Забрать
@@ -215,20 +233,26 @@ async function openAnimalModal(animalId) {
             </div>
         `;
     } catch (error) {
+        console.error('Ошибка загрузки:', error);
         modalContent.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
     }
 }
 
 function closeAnimalModal() {
     const modal = document.getElementById('animalModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 }
 
 function handleAdoptRequest(animalName) {
-    if (!API.Auth.isAuthenticated()) {
-        alert('Войдите в аккаунт, чтобы оставить заявку');
-        window.location.href = 'login.html';
+    // Проверяем, авторизован ли пользователь
+    const credentials = localStorage.getItem('userCredentials');
+    if (!credentials) {
+        if (confirm('Чтобы оставить заявку, нужно войти в аккаунт. Перейти на страницу входа?')) {
+            window.location.href = 'login.html';
+        }
         return;
     }
     alert(`Заявка на "${animalName}" отправлена!`);
@@ -236,9 +260,11 @@ function handleAdoptRequest(animalName) {
 }
 
 function handleContact(animalName) {
-    if (!API.Auth.isAuthenticated()) {
-        alert('Войдите в аккаунт, чтобы связаться с владельцем');
-        window.location.href = 'login.html';
+    const credentials = localStorage.getItem('userCredentials');
+    if (!credentials) {
+        if (confirm('Чтобы связаться с владельцем, нужно войти в аккаунт. Перейти на страницу входа?')) {
+            window.location.href = 'login.html';
+        }
         return;
     }
     alert(`Открываем чат с владельцем "${animalName}"`);
@@ -300,7 +326,79 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Инициализация
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 Главная страница загружена');
+    loadAnimals();
+});
+
+
+// Проверка авторизации на главной странице
+function updateNavAuth() {
+    const credentials = localStorage.getItem('userCredentials');
+    const navActions = document.getElementById('navActions');
+    const mobileNavActions = document.getElementById('mobileNavActions');
+    
+    if (credentials) {
+        // Пользователь авторизован
+        const user = JSON.parse(credentials);
+        const userData = localStorage.getItem('userData');
+        const profile = userData ? JSON.parse(userData) : null;
+        const firstName = profile?.FirstName || profile?.firstname || '';
+        const surname = profile?.Surname || profile?.surname || '';
+        const displayName = `${firstName} ${surname}`.trim() || 'Пользователь';
+        
+        if (navActions) {
+            navActions.innerHTML = `
+                <a href="dashboard.html" class="btn btn-outline">
+                    <i class="fa-solid fa-user"></i> ${displayName}
+                </a>
+                <button onclick="logoutFromMain()" class="btn btn-primary" style="background: #dc2626;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Выйти
+                </button>
+            `;
+        }
+        
+        if (mobileNavActions) {
+            mobileNavActions.innerHTML = `
+                <a href="dashboard.html" class="btn btn-outline" onclick="closeMobileNav()">
+                    <i class="fa-solid fa-user"></i> ${displayName}
+                </a>
+                <button onclick="logoutFromMain()" class="btn btn-primary" style="background: #dc2626; width: 100%;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Выйти
+                </button>
+            `;
+        }
+    } else {
+        // Пользователь не авторизован
+        if (navActions) {
+            navActions.innerHTML = `
+                <a href="login.html" class="btn btn-outline">Войти</a>
+                <a href="register.html" class="btn btn-primary">Регистрация</a>
+            `;
+        }
+        
+        if (mobileNavActions) {
+            mobileNavActions.innerHTML = `
+                <a href="login.html" class="btn btn-outline" onclick="closeMobileNav()">Войти</a>
+                <a href="register.html" class="btn btn-primary" onclick="closeMobileNav()">Регистрация</a>
+            `;
+        }
+    }
+}
+
+function logoutFromMain() {
+    if (confirm('Вы уверены, что хотите выйти из аккаунта?')) {
+        localStorage.removeItem('userCredentials');
+        localStorage.removeItem('userData');
+        updateNavAuth();
+        alert('Вы вышли из аккаунта');
+    }
+}
+
+// Вызываем при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 Главная страница загружена');
+    updateNavAuth();
     loadAnimals();
 });
