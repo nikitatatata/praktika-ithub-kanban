@@ -44,13 +44,31 @@ document.addEventListener('DOMContentLoaded', () => {
 // Рендер меню
 function renderMenu() {
     const nav = document.getElementById('sidebarNav');
-    nav.innerHTML = menuItems.map((item) => `
-        <a href="#" class="nav-item ${item.id === currentTab ? 'active' : ''}" 
-           onclick="switchTab('${item.id}', '${item.label}'); return false;">
-            <i class="fa-solid ${item.icon}"></i>
-            <span>${item.label}</span>
-        </a>
-    `).join('');
+    const bottomNav = document.getElementById('bottomNav');
+    
+    // Десктопное меню
+    if (nav) {
+        nav.innerHTML = menuItems.map((item) => `
+            <a href="#" class="nav-item ${item.id === currentTab ? 'active' : ''}" 
+               onclick="switchTab('${item.id}', '${item.label}'); return false;">
+                <i class="fa-solid ${item.icon}"></i>
+                <span>${item.label}</span>
+            </a>
+        `).join('');
+    }
+    
+    // Мобильное меню (нижняя навигация)
+    if (bottomNav) {
+        // Показываем только основные пункты для мобильной навигации
+        const mobileMenuItems = menuItems.slice(0, 5);
+        bottomNav.innerHTML = mobileMenuItems.map((item) => `
+            <a href="#" class="bottom-nav-item ${item.id === currentTab ? 'active' : ''}" 
+               onclick="switchTab('${item.id}', '${item.label}'); return false;">
+                <i class="fa-solid ${item.icon}"></i>
+                <span>${item.label}</span>
+            </a>
+        `).join('');
+    }
 }
 
 // Смена вкладки
@@ -58,6 +76,7 @@ function switchTab(tabId, title) {
     currentTab = tabId;
     document.getElementById('pageTitle').textContent = title;
     
+    // Обновляем активный класс в десктопном меню
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('onclick').includes(`'${tabId}'`)) {
@@ -65,7 +84,18 @@ function switchTab(tabId, title) {
         }
     });
     
+    // Обновляем активный класс в мобильном меню
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('onclick').includes(`'${tabId}'`)) {
+            item.classList.add('active');
+        }
+    });
+    
     renderContent(tabId);
+    
+    // Прокрутка вверх при смене вкладки
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // Рендер контента
@@ -616,5 +646,30 @@ function toggleDashboardFavoriteBtn(btn, animalId) {
         btn.style.background = '';
         btn.style.color = '';
         alert('Удалено из избранного');
+    }
+}
+
+// Мобильное быстрое действие
+function showQuickAction() {
+    if (window.innerWidth <= 768) {
+        // На мобильных показываем простое меню
+        const actions = [
+            { label: 'Разместить животное', icon: 'fa-paw' },
+            { label: 'Создать сбор средств', icon: 'fa-hand-holding-dollar' },
+            { label: 'Найти питомца', icon: 'fa-magnifying-glass' }
+        ];
+        
+        const actionText = actions.map((a, i) => `${i + 1}. ${a.label}`).join('\n');
+        const choice = prompt(`Выберите действие:\n${actionText}\n\nВведите номер:`);
+        
+        if (choice === '1') {
+            switchTab('my-animals', 'Мои животные');
+        } else if (choice === '2') {
+            alert('Создание сбора средств');
+        } else if (choice === '3') {
+            switchTab('search', 'Поиск животных');
+        }
+    } else {
+        alert('Разместить:\n• Животное (отдать/продать/сбор)\n• Сбор средств\n• Искать питомца');
     }
 }

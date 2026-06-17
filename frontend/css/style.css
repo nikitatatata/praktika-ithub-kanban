@@ -54,6 +54,12 @@ body {
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--primary);
+    text-decoration: none;
+    transition: opacity 0.3s;
+}
+
+.logo:hover {
+    opacity: 0.8;
 }
 
 .nav-links {
@@ -117,6 +123,11 @@ body {
     color: var(--primary);
 }
 
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
 .btn-lg {
     padding: 0.75rem 2rem;
     font-size: 1.1rem;
@@ -148,13 +159,66 @@ body {
     justify-content: center;
 }
 
+/* Как это работает */
+.how-it-works {
+    padding: 5rem 0;
+    background: white;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: var(--gray-800);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 1rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: white;
+    font-size: 2rem;
+}
+
+.feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--gray-800);
+}
+
+.feature-card p {
+    color: var(--gray-600);
+    line-height: 1.6;
+}
+
 /* Поиск */
 .search-section {
-    background: white;
-    padding: 2rem 0;
-    margin-top: -2rem;
-    position: relative;
-    z-index: 10;
+    background: var(--gray-50);
+    padding: 4rem 0;
 }
 
 .search-box {
@@ -183,14 +247,7 @@ body {
 /* Каталог животных */
 .animals-section {
     padding: 4rem 0;
-    background: var(--gray-50);
-}
-
-.section-title {
-    text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-    color: var(--gray-800);
+    background: white;
 }
 
 .animals-grid {
@@ -205,6 +262,7 @@ body {
     overflow: hidden;
     box-shadow: var(--shadow);
     transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
 }
 
 .animal-card:hover {
@@ -245,12 +303,22 @@ body {
 
 .animal-meta {
     color: var(--gray-600);
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.animal-location {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+}
+
+.animal-location i {
+    margin-right: 0.25rem;
 }
 
 .animal-desc {
     color: var(--gray-600);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     line-height: 1.5;
 }
 
@@ -269,6 +337,10 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .btn-adopt:hover {
@@ -276,42 +348,78 @@ body {
 }
 
 .btn-donate {
-    background: transparent;
-    color: var(--primary);
-    border: 2px solid var(--primary);
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: none;
     padding: 0.75rem;
     border-radius: 0.5rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-donate:hover {
-    background: var(--primary);
-    color: white;
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Бейджи целей */
+.purpose-badge {
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.purpose-free {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.purpose-sale {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.purpose-fundraising {
+    background: #fef3c7;
+    color: #92400e;
 }
 
 /* Футер */
 .footer {
     background: var(--gray-800);
     color: white;
-    padding: 3rem 0;
+    padding: 4rem 0 2rem;
 }
 
 .footer-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    gap: 3rem;
+    margin-bottom: 3rem;
 }
 
 .footer h3 {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     color: var(--primary);
+    font-size: 1.25rem;
 }
 
 .footer p {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     opacity: 0.9;
+    line-height: 1.6;
+}
+
+.footer i {
+    margin-right: 0.5rem;
+    width: 20px;
 }
 
 .social-links {
@@ -322,11 +430,19 @@ body {
 .social-links a {
     color: white;
     font-size: 1.5rem;
-    transition: color 0.3s;
+    transition: color 0.3s, transform 0.3s;
 }
 
 .social-links a:hover {
     color: var(--primary);
+    transform: translateY(-3px);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    opacity: 0.8;
 }
 
 /* Dashboard стили */
@@ -352,38 +468,20 @@ body {
 }
 
 .sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 2px solid var(--gray-100);
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: bold;
     color: var(--primary);
+    text-decoration: none;
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--gray-100);
+    transition: opacity 0.3s;
 }
 
-.role-selector {
-    padding: 1rem;
-    background: var(--gray-50);
-    border-bottom: 1px solid var(--gray-200);
-}
-
-.role-selector label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: var(--gray-600);
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-}
-
-.role-selector select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--gray-200);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    cursor: pointer;
+.sidebar-header:hover {
+    opacity: 0.8;
 }
 
 .sidebar-nav {
@@ -524,7 +622,7 @@ body {
     padding: 2rem;
 }
 
-/* Карточки для dashboard */
+/* Карточки статистики */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -552,6 +650,7 @@ body {
     color: var(--gray-800);
 }
 
+/* Карточки */
 .card {
     background: white;
     border-radius: 1rem;
@@ -564,64 +663,6 @@ body {
     font-size: 1.25rem;
     font-weight: bold;
     margin-bottom: 1rem;
-}
-
-/* Трекер статуса */
-.status-tracker {
-    position: relative;
-    padding-left: 2rem;
-}
-
-.status-tracker::before {
-    content: '';
-    position: absolute;
-    left: 0.75rem;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: var(--gray-200);
-}
-
-.status-item {
-    display: flex;
-    align-items: start;
-    margin-bottom: 2rem;
-    position: relative;
-}
-
-.status-icon {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 50%;
-    background: var(--gray-200);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-}
-
-.status-item.completed .status-icon {
-    background: #10b981;
-    color: white;
-}
-
-.status-item.active .status-icon {
-    background: var(--primary);
-    color: white;
-    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2);
-}
-
-.status-content h4 {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-}
-
-.status-content p {
-    color: var(--gray-600);
-    font-size: 0.875rem;
 }
 
 /* Таблицы */
@@ -649,58 +690,11 @@ body {
     background: var(--gray-50);
 }
 
-/* Прогресс бар */
-.progress-bar {
-    width: 100%;
-    height: 0.75rem;
-    background: var(--gray-200);
-    border-radius: 1rem;
-    overflow: hidden;
-    margin: 1rem 0;
+.table-responsive {
+    overflow-x: auto;
 }
 
-.progress-fill {
-    height: 100%;
-    background: var(--secondary);
-    border-radius: 1rem;
-    transition: width 0.3s;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-    }
-    
-    .hero h1 {
-        font-size: 2rem;
-    }
-    
-    .hero-buttons {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        height: auto;
-        max-height: 60vh;
-        overflow-y: auto;
-        transform: translateY(100%);
-        transition: transform 0.3s;
-        z-index: 1000;
-    }
-    
-    .sidebar.active {
-        transform: translateY(0);
-    }
-
-}
-/* Дополнительные стили для badge */
+/* Бейджи статусов */
 .badge-success {
     background: #d1fae5;
     color: #065f46;
@@ -752,7 +746,7 @@ body {
     padding: 1.5rem;
     border-radius: 0.75rem;
     text-align: center;
-    text-decoration: none;
+    cursor: pointer;
     transition: all 0.3s;
     border: 2px solid transparent;
 }
@@ -773,223 +767,6 @@ body {
     color: var(--gray-600);
     font-size: 0.875rem;
     margin: 0;
-}
-
-/* Таблица с прокруткой */
-.table-responsive {
-    overflow-x: auto;
-}
-
-/* Адаптивность для мобильных */
-@media (max-width: 768px) {
-    .dashboard-container {
-        flex-direction: column;
-    }
-    
-    .sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 50vh;
-        overflow-y: auto;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Стили для логотипа */
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--primary);
-    text-decoration: none;
-    transition: opacity 0.3s;
-}
-
-.logo:hover {
-    opacity: 0.8;
-}
-
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: var(--primary);
-    text-decoration: none;
-    padding: 1.5rem;
-    border-bottom: 2px solid var(--gray-100);
-    transition: opacity 0.3s;
-}
-
-.sidebar-header:hover {
-    opacity: 0.8;
-}
-
-/* Как это работает */
-.how-it-works {
-    padding: 5rem 0;
-    background: white;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.feature-card {
-    text-align: center;
-    padding: 2rem;
-    border-radius: 1rem;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-lg);
-}
-
-.feature-icon {
-    width: 80px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    color: white;
-    font-size: 2rem;
-}
-
-.feature-card h3 {
-    font-size: 1.25rem;
-    margin-bottom: 0.75rem;
-    color: var(--gray-800);
-}
-
-.feature-card p {
-    color: var(--gray-600);
-    line-height: 1.6;
-}
-
-/* Бейджи целей */
-.purpose-badge {
-    display: inline-block;
-    padding: 0.375rem 0.875rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-top: 0.5rem;
-}
-
-.purpose-free {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.purpose-sale {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.purpose-fundraising {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.animal-location {
-    color: var(--gray-600);
-    font-size: 0.875rem;
-    margin: 0.5rem 0;
-}
-
-.animal-location i {
-    margin-right: 0.25rem;
-}
-
-/* Футер */
-.footer {
-    background: var(--gray-800);
-    color: white;
-    padding: 4rem 0 2rem;
-}
-
-.footer-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 3rem;
-    margin-bottom: 3rem;
-}
-
-.footer h3 {
-    margin-bottom: 1.5rem;
-    color: var(--primary);
-    font-size: 1.25rem;
-}
-
-.footer p {
-    margin-bottom: 0.75rem;
-    opacity: 0.9;
-    line-height: 1.6;
-}
-
-.footer i {
-    margin-right: 0.5rem;
-    width: 20px;
-}
-
-.social-links {
-    display: flex;
-    gap: 1rem;
-}
-
-.social-links a {
-    color: white;
-    font-size: 1.5rem;
-    transition: color 0.3s, transform 0.3s;
-}
-
-.social-links a:hover {
-    color: var(--primary);
-    transform: translateY(-3px);
-}
-
-.footer-bottom {
-    text-align: center;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    opacity: 0.8;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .nav-links {
-        display: none;
-    }
-    
-    .hero h1 {
-        font-size: 2rem;
-    }
-    
-    .hero-buttons {
-        flex-direction: column;
-    }
-    
-    .search-box {
-        grid-template-columns: 1fr;
-    }
-    
-    .features-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* Модальное окно карточки животного */
@@ -1148,9 +925,6 @@ body {
 .animal-detail-features .feature-item {
     flex: 1;
     min-width: 200px;
-}
-
-.feature-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -1341,8 +1115,43 @@ body {
     color: var(--secondary);
 }
 
-/* Адаптивность модального окна */
+/* Адаптивность */
 @media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+    }
+    
+    .search-box {
+        grid-template-columns: 1fr;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
     .modal-overlay {
         padding: 1rem;
     }
@@ -1367,11 +1176,437 @@ body {
         font-size: 1.5rem;
     }
     
-    .animal-detail-features {
+    .animal-detail-actions {
         grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== МОБИЛЬНАЯ АДАПТАЦИЯ ==================== */
+
+/* Бургер-меню для главной страницы */
+.burger-menu {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 0.5rem;
+    background: none;
+    border: none;
+}
+
+.burger-menu span {
+    width: 25px;
+    height: 3px;
+    background: var(--gray-800);
+    border-radius: 3px;
+    transition: all 0.3s;
+}
+
+.burger-menu.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.burger-menu.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.burger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+}
+
+.mobile-nav {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: var(--shadow-lg);
+    padding: 1rem;
+    z-index: 99;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mobile-nav.active {
+    display: flex;
+}
+
+.mobile-nav a {
+    padding: 1rem;
+    text-decoration: none;
+    color: var(--gray-800);
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: background 0.3s;
+}
+
+.mobile-nav a:hover {
+    background: var(--gray-100);
+}
+
+.mobile-nav .btn {
+    margin-top: 0.5rem;
+    justify-content: center;
+}
+
+/* Нижняя навигация для dashboard */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    padding: 0.5rem;
+    z-index: 100;
+    justify-content: space-around;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    text-decoration: none;
+    color: var(--gray-600);
+    font-size: 0.7rem;
+    transition: color 0.3s;
+    flex: 1;
+}
+
+.bottom-nav-item i {
+    font-size: 1.25rem;
+}
+
+.bottom-nav-item.active {
+    color: var(--primary);
+}
+
+.bottom-nav-item:hover {
+    color: var(--primary);
+}
+
+/* Мобильные стили для dashboard */
+.mobile-header {
+    display: none;
+}
+
+/* Планшеты (768px - 1024px) */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 240px;
+    }
+    
+    .animal-detail {
+        grid-template-columns: 1fr;
+    }
+    
+    .animal-detail-image {
+        min-height: 350px;
+    }
+    
+    .animal-detail-image img {
+        border-radius: 1rem 1rem 0 0;
+    }
+}
+
+/* Мобильные устройства (до 768px) */
+@media (max-width: 768px) {
+    /* Главная страница */
+    .burger-menu {
+        display: flex;
+    }
+    
+    .nav-links,
+    .nav-actions {
+        display: none;
+    }
+    
+    .hero {
+        padding: 3rem 0;
+    }
+    
+    .hero h1 {
+        font-size: 1.75rem;
+        line-height: 1.2;
+    }
+    
+    .hero p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .section-title {
+        font-size: 1.75rem;
+        margin-bottom: 2rem;
+    }
+    
+    .how-it-works {
+        padding: 3rem 0;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .search-section {
+        padding: 2rem 0;
+    }
+    
+    .search-box {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .animals-section {
+        padding: 2rem 0;
+    }
+    
+    .animals-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .animal-image {
+        height: 200px;
+    }
+    
+    .animal-info {
+        padding: 1rem;
+    }
+    
+    .animal-name {
+        font-size: 1.25rem;
+    }
+    
+    .footer {
+        padding: 2rem 0 1rem;
+    }
+    
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Dashboard */
+    .dashboard-body {
+        height: auto;
+        overflow: auto;
+        padding-bottom: 80px;
+    }
+    
+    .dashboard-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .sidebar {
+        display: none;
+    }
+    
+    .mobile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: white;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+    
+    .mobile-header .logo {
+        font-size: 1.25rem;
+    }
+    
+    .mobile-header .icon-btn {
+        position: relative;
+    }
+    
+    .main-content {
+        overflow: visible;
+    }
+    
+    .top-bar {
+        display: none;
+    }
+    
+    .content {
+        padding: 1rem;
+    }
+    
+    .bottom-nav {
+        display: flex;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-card h3 {
+        font-size: 0.75rem;
+    }
+    
+    .stat-card .value {
+        font-size: 1.5rem;
+    }
+    
+    .card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .card-title {
+        font-size: 1.125rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .quick-action-card {
+        padding: 1rem;
+    }
+    
+    .quick-action-card i {
+        font-size: 1.5rem !important;
+    }
+    
+    .quick-action-card h3 {
+        font-size: 1rem;
+    }
+    
+    /* Модальное окно */
+    .modal-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+    
+    .modal-content {
+        max-height: 95vh;
+        border-radius: 1rem 1rem 0 0;
+        transform: translateY(100%);
+    }
+    
+    .modal-overlay.active .modal-content {
+        transform: translateY(0);
+    }
+    
+    .animal-detail-image {
+        min-height: 250px;
+    }
+    
+    .animal-detail-info {
+        padding: 1rem;
+    }
+    
+    .animal-detail-name {
+        font-size: 1.5rem;
+    }
+    
+    .animal-detail-meta {
+        gap: 0.5rem;
+    }
+    
+    .animal-detail-meta-item {
+        font-size: 0.875rem;
+    }
+    
+    .animal-detail-features {
+        flex-direction: column;
+    }
+    
+    .animal-detail-features .feature-item {
+        min-width: 100%;
+    }
+    
+    .animal-detail-actions {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .btn-detail-primary,
+    .btn-detail-secondary,
+    .btn-detail-icon {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .owner-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+}
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
     }
     
     .animal-detail-actions {
         grid-template-columns: 1fr;
+    }
+    
+    .btn-detail-icon {
+        display: none;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bottom-nav-item {
+        font-size: 0.65rem;
+        padding: 0.25rem;
+    }
+    
+    .bottom-nav-item i {
+        font-size: 1.125rem;
+    }
+}
+
+/* Горизонтальная ориентация на мобильных */
+@media (max-height: 500px) and (orientation: landscape) {
+    .modal-overlay {
+        align-items: center;
+    }
+    
+    .modal-content {
+        max-height: 90vh;
+        border-radius: 1rem;
+    }
+    
+    .animal-detail-image {
+        min-height: 200px;
     }
 }

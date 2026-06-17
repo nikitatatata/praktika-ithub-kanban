@@ -341,3 +341,41 @@ function toggleFavoriteBtn(btn, animalId) {
         alert('Удалено из избранного');
     }
 }
+
+// Мобильное меню
+function toggleMobileNav() {
+    const burger = document.getElementById('burgerMenu');
+    const mobileNav = document.getElementById('mobileNav');
+    
+    burger.classList.toggle('active');
+    mobileNav.classList.toggle('active');
+    
+    // Блокировка прокрутки body
+    if (mobileNav.classList.contains('active')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+}
+
+function closeMobileNav() {
+    const burger = document.getElementById('burgerMenu');
+    const mobileNav = document.getElementById('mobileNav');
+    
+    burger.classList.remove('active');
+    mobileNav.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Закрытие мобильного меню при клике вне его
+document.addEventListener('click', (e) => {
+    const burger = document.getElementById('burgerMenu');
+    const mobileNav = document.getElementById('mobileNav');
+    
+    if (burger && mobileNav && 
+        !burger.contains(e.target) && 
+        !mobileNav.contains(e.target) && 
+        mobileNav.classList.contains('active')) {
+        closeMobileNav();
+    }
+});
