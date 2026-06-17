@@ -78,8 +78,10 @@ echo -e "\n"
 echo "=== 13. Создание сбора средств (для животного с ID=1) ==="
 curl -sS -X POST "${BASE_URL}/api/fundraiser" \
   -H "accept: application/json" \
+  -F "Title=Сбор на операцию" \
   -F "TargetAmount=10000" \
   -F "Description=На операцию для Кеши" \
+  -F "image=@test_image.jpg" \
   -F "AnimalID=1" \
   -F "Email=testuser@mail.com" \
   -F "PasswordHash=secret123"

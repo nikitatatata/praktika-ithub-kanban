@@ -175,9 +175,11 @@ def delete_animal(
     return Response(status_code=204)
 
 @app.post("/api/fundraiser")
-def create_new_fundraiser(
+async def create_new_fundraiser(
+    Title: str = Form(...),
     TargetAmount: int = Form(...),
     Description: str = Form(...),
+    image: UploadFile = File(...),
     AnimalID: int = Form(None),
     Email: str = Form(...),
     PasswordHash: str = Form(...)
@@ -186,7 +188,14 @@ def create_new_fundraiser(
     if not user_id:
         return Response(content='{"error": "Unauthorized"}', status_code=403, media_type="application/json")
 
-    fundraiser = create_fundraiser(user_id, TargetAmount, Description, AnimalID)
+    file_path = UPLOADS_DIR / image.filename
+    
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(image.file, buffer)
+        
+    image_path_for_db = f"/uploads/{image.filename}"
+
+    fundraiser = create_fundraiser(user_id, Title, TargetAmount, Description, image_path_for_db, AnimalID)
     if not fundraiser:
         return Response(content='{"error": "Failed to create fundraiser"}', status_code=500, media_type="application/json")
     

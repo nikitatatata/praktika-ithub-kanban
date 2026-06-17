@@ -172,13 +172,13 @@ def delete_Animal(animal_id: int, user_id: int):
         return 500
     return 204
 
-def create_fundraiser(CreatorUserID: int, TargetAmount: int, Description: str, AnimalID: int = None):
+def create_fundraiser(CreatorUserID: int, Title: str, TargetAmount: int, Description: str, ImagePath: str, AnimalID: int = None):
     query = """
-        INSERT INTO "public"."Fundraisers" ("CreatorUserID", "AnimalID", "TargetAmount", "Description")
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO "public"."Fundraisers" ("CreatorUserID", "AnimalID", "Title", "TargetAmount", "Description", "ImagePath")
+        VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING *
     """
-    params = (CreatorUserID, AnimalID, TargetAmount, Description)
+    params = (CreatorUserID, AnimalID, Title, TargetAmount, Description, ImagePath)
     res = db.execute(query, params, fetch=True)
     if isinstance(res, Exception) or not res:
         return None

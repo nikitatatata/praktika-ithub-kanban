@@ -28,9 +28,11 @@ CREATE TABLE IF NOT EXISTS "public"."Fundraisers" (
     "id" bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     "CreatorUserID" bigint NOT NULL REFERENCES "public"."User"("id") ON DELETE CASCADE,
     "AnimalID" bigint REFERENCES "public"."Animal"("id") ON DELETE CASCADE,
+    "Title" text NOT NULL,
     "TargetAmount" bigint NOT NULL,
     "CurrentAmount" bigint NOT NULL DEFAULT 0,
     "Description" text,
+    "ImagePath" text,
     "IsActive" boolean NOT NULL DEFAULT true
 );
 
