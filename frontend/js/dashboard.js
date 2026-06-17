@@ -1,4 +1,5 @@
-// Проверка авторизации
+// ==================== УТИЛИТЫ ====================
+
 function checkAuth() {
     if (!API.Auth.isAuthenticated()) {
         window.location.href = 'login.html';
@@ -7,49 +8,85 @@ function checkAuth() {
     return true;
 }
 
-// Загрузка профиля пользователя
+// Безопасное получение поля из объекта (регистронезависимо)
+function getField(obj, ...names) {
+    for (const name of names) {
+        if (obj && obj[name] !== undefined && obj[name] !== null) {
+            return obj[name];
+        }
+    }
+    return '';
+}
+
+// ==================== ЗАГРУЗКА ПРОФИЛЯ ====================
+
 async function loadUserProfile(forceRefresh = false) {
     const credentials = API.storage.getCredentials();
     if (!credentials || !credentials.userId) {
-        console.warn('userId не найден в credentials');
+        console.warn('userId не найден');
         return;
     }
     
     try {
         let profile;
         
-        // Если forceRefresh = true, всегда загружаем с сервера
         if (forceRefresh) {
-            console.log('Принудительная загрузка профиля с сервера...');
+            console.log(' Принудительная загрузка профиля...');
             profile = await API.User.getProfile(credentials.userId);
+            console.log('📦 Получен профиль:', profile);
             API.storage.setUserData(profile);
-            console.log('Профиль загружен с сервера:', profile);
         } else {
-            // Иначе пробуем из кеша
             profile = API.storage.getUserData();
             if (!profile || profile.id !== credentials.userId) {
-                console.log('Кеш устарел, загружаем с сервера...');
+                console.log('🔄 Кеш устарел, загружаем с сервера...');
                 profile = await API.User.getProfile(credentials.userId);
                 API.storage.setUserData(profile);
-            } else {
-                console.log('Используем данные из кеша:', profile);
             }
         }
         
-        const fullName = `${profile.FirstName || ''} ${profile.Surname || ''}`.trim();
-        document.getElementById('userName').textContent = fullName || 'Пользователь';
-        document.getElementById('userRole').textContent = profile.Description || 'Пользователь';
+        // Получаем поля регистронезависимо
+        const firstName = getField(profile, 'FirstName', 'firstname', 'firstName');
+        const surname = getField(profile, 'Surname', 'surname', 'lastName');
+        const lastname = getField(profile, 'Lastname', 'lastname', 'middleName');
+        const phone = getField(profile, 'Phone', 'phone');
+        const location = getField(profile, 'Location', 'location');
+        const description = getField(profile, 'Description', 'description');
         
-        // Обновляем аватар (инициалы)
-        const initials = (profile.FirstName?.[0] || '') + (profile.Surname?.[0] || '');
+        console.log('👤 Обработанные данные:', { firstName, surname, lastname, phone, location, description });
+        
+        // Обновляем боковое меню (имя + фамилия, без отчества)
+        const shortName = `${firstName} ${surname}`.trim() || 'Пользователь';
+        document.getElementById('userName').textContent = shortName;
+        document.getElementById('userRole').textContent = description || 'Пользователь';
+        
+        // Инициалы для аватара
+        const initials = (firstName[0] || '') + (surname[0] || '');
         document.getElementById('userAvatar').textContent = initials || 'П';
         
+        // Если мы на вкладке профиля — обновляем форму
+        if (currentTab === 'profile') {
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val || '';
+            };
+            setVal('profileFirstname', firstName);
+            setVal('profileLastname', lastname);
+            setVal('profileSurname', surname);
+            setVal('profilePhone', phone);
+            setVal('profileLocation', location);
+            setVal('profileDescription', description);
+            console.log('✅ Форма профиля обновлена');
+        }
+        
     } catch (error) {
-        console.error('Error loading profile:', error);
-        document.getElementById('userName').textContent = credentials.email;
+        console.error('❌ Ошибка загрузки профиля:', error);
+        const credentials = API.storage.getCredentials();
+        document.getElementById('userName').textContent = credentials?.email || 'Пользователь';
         document.getElementById('userRole').textContent = 'Пользователь';
     }
 }
+
+// ==================== МЕНЮ ====================
 
 const menuItems = [
     { id: 'dashboard', icon: 'fa-house', label: 'Главная' },
@@ -64,16 +101,16 @@ const menuItems = [
 
 let currentTab = 'dashboard';
 
-// Инициализация
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
     
-    await loadUserProfile();
     renderMenu();
+    await loadUserProfile();
     switchTab('dashboard');
 });
 
-// Рендер меню
 function renderMenu() {
     const nav = document.getElementById('sidebarNav');
     const bottomNav = document.getElementById('bottomNav');
@@ -100,7 +137,6 @@ function renderMenu() {
     }
 }
 
-// Смена вкладки
 function switchTab(tabId, title) {
     currentTab = tabId;
     document.getElementById('pageTitle').textContent = title;
@@ -123,429 +159,521 @@ function switchTab(tabId, title) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Рендер контента
+// ==================== РЕНДЕР КОНТЕНТА ====================
+
 async function renderContent(tabId) {
     const content = document.getElementById('mainContent');
     const credentials = API.storage.getCredentials();
     const userId = credentials?.userId;
     
-    if (tabId === 'dashboard') {
-        content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
-        
-        try {
-            const [animals, donations] = await Promise.all([
-                API.Animal.getUserAnimals(userId).catch(() => []),
-                API.FundraiserAPI.getUserDonations(userId).catch(() => [])
-            ]);
-            
-            const activeAnimals = animals.filter(a => a.Cost !== undefined);
-            const totalDonated = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
-            
-            content.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card" style="border-left-color: #3b82f6;">
-                        <h3>Мои объявления</h3>
-                        <div class="value">${animals.length}</div>
-                    </div>
-                    <div class="stat-card" style="border-left-color: #f97316;">
-                        <h3>Пожертвований</h3>
-                        <div class="value">${donations.length}</div>
-                    </div>
-                    <div class="stat-card" style="border-left-color: #10b981;">
-                        <h3>Помощь оказана</h3>
-                        <div class="value">${totalDonated} ₽</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2 class="card-title">Быстрые действия</h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                        <div class="quick-action-card" onclick="showAddAnimalModal()">
-                            <i class="fa-solid fa-circle-plus" style="font-size: 2rem; color: var(--primary);"></i>
-                            <h3>Разместить животное</h3>
-                            <p>Отдать даром, продать или собрать средства</p>
-                        </div>
-                        <div class="quick-action-card" onclick="showAddFundraiserModal()">
-                            <i class="fa-solid fa-hand-holding-dollar" style="font-size: 2rem; color: #10b981;"></i>
-                            <h3>Создать сбор</h3>
-                            <p>Открыть сбор средств на помощь животному</p>
-                        </div>
-                        <div class="quick-action-card" onclick="switchTab('search', 'Поиск')">
-                            <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; color: var(--secondary);"></i>
-                            <h3>Найти питомца</h3>
-                            <p>Ищите среди объявлений</p>
-                        </div>
-                    </div>
-                </div>
-
-                ${animals.length > 0 ? `
-                    <div class="card">
-                        <h2 class="card-title">Мои последние объявления</h2>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Имя</th>
-                                        <th>Тип</th>
-                                        <th>Цена</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${animals.slice(0, 5).map(animal => `
-                                        <tr>
-                                            <td><strong>${animal.Name}</strong></td>
-                                            <td>${animal.Type}</td>
-                                            <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                ` : ''}
-            `;
-        } catch (error) {
-            content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки данных</p>';
-        }
+    if (!userId) {
+        content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка: не удалось получить ID пользователя. Войдите заново.</p>';
+        return;
     }
-    else if (tabId === 'my-animals') {
-        content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
-        
-        try {
-            const animals = await API.Animal.getUserAnimals(userId);
-            
-            content.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                    <h2 class="card-title" style="margin: 0;">Мои животные</h2>
-                    <button class="btn btn-primary" onclick="showAddAnimalModal()">
-                        <i class="fa-solid fa-plus"></i> Разместить объявление
-                    </button>
-                </div>
-
-                <div class="card">
-                    ${animals.length > 0 ? `
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Имя</th>
-                                        <th>Тип</th>
-                                        <th>Порода</th>
-                                        <th>Возраст</th>
-                                        <th>Цена</th>
-                                        <th>Действия</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${animals.map(animal => `
-                                        <tr>
-                                            <td><strong>${animal.Name}</strong></td>
-                                            <td>${animal.Type}</td>
-                                            <td>${animal.Breed}</td>
-                                            <td>${animal.OrientatedAge} лет</td>
-                                            <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
-                                            <td>
-                                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.25rem;" onclick="openAnimalDetailModal(${animal.id})">
-                                                    <i class="fa-solid fa-eye"></i>
-                                                </button>
-                                                <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteAnimal(${animal.id})">
-                                                    <i class="fa-solid fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    ` : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">У вас пока нет объявлений</p>'}
-                </div>
-            `;
-        } catch (error) {
-            content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
+    
+    // Показываем загрузку
+    content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
+    
+    try {
+        switch (tabId) {
+            case 'dashboard':
+                await renderDashboard(content, userId);
+                break;
+            case 'my-animals':
+                await renderMyAnimals(content, userId);
+                break;
+            case 'applications':
+                renderApplications(content);
+                break;
+            case 'favorites':
+                renderFavorites(content);
+                break;
+            case 'fundraisers':
+                await renderFundraisers(content);
+                break;
+            case 'my-donations':
+                await renderMyDonations(content, userId);
+                break;
+            case 'search':
+                await renderSearch(content);
+                break;
+            case 'profile':
+                renderProfile(content);
+                // После рендера формы загружаем данные
+                await loadUserProfile(true);
+                break;
+            default:
+                content.innerHTML = '<p>Вкладка не найдена</p>';
         }
-    }
-    else if (tabId === 'applications') {
+    } catch (error) {
+        console.error(`❌ Ошибка на вкладке ${tabId}:`, error);
         content.innerHTML = `
             <div class="card">
-                <h2 class="card-title">Заявки на моих животных</h2>
-                <p style="text-align: center; padding: 2rem; color: var(--gray-600);">
-                    <i class="fa-solid fa-comments" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
-                    Раздел заявок находится в разработке
-                </p>
-            </div>
-        `;
-    }
-    else if (tabId === 'favorites') {
-        content.innerHTML = `
-            <h2 class="card-title" style="margin-bottom: 1.5rem;">Избранные животные</h2>
-            <div class="card">
-                <p style="text-align: center; padding: 2rem; color: var(--gray-600);">
-                    <i class="fa-regular fa-heart" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
-                    У вас пока нет избранных животных
-                </p>
-            </div>
-        `;
-    }
-        else if (tabId === 'donations') {
-        content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
-        
-        try {
-            // Загружаем все сборы (новые сверху)
-            const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
-            
-            // Сортируем по дате (новые сверху)
-            fundraisers.sort((a, b) => {
-                const dateA = new Date(a.CreatedAt || 0);
-                const dateB = new Date(b.CreatedAt || 0);
-                return dateB - dateA;
-            });
-            
-            content.innerHTML = `
-                <h2 class="card-title" style="margin-bottom: 1.5rem;">Активные сборы средств</h2>
-                <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                    ${fundraisers.length > 0 ? fundraisers.map(f => {
-                        const collected = f.CollectedAmount || 0;
-                        const goal = f.TargetAmount || 0;
-                        const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
-                        
-                        return `
-                            <div class="fundraiser-card">
-                                <img src="${f.ImagePath || 'https://via.placeholder.com/500x300?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image">
-                                <div class="fundraiser-info">
-                                    <h3 class="fundraiser-title">${f.Title}</h3>
-                                    <p class="fundraiser-desc">${f.Description}</p>
-                                    
-                                    <div class="fundraiser-progress">
-                                        <div class="fundraiser-meta">
-                                            <span style="font-weight: 600; color: var(--secondary);">${collected} ₽</span>
-                                            <span style="color: var(--gray-600);">из ${goal} ₽</span>
-                                        </div>
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" style="width: ${percent}%;"></div>
-                                        </div>
-                                        <div style="text-align: right; font-size: 0.875rem; font-weight: 600; color: var(--secondary);">
-                                            ${percent}% собрано
-                                        </div>
-                                    </div>
-                                    
-                                    ${f.AnimalID ? `<a href="#" onclick="openAnimalDetailModal(${f.AnimalID}); return false;" class="fundraiser-animal-link">
-                                        <i class="fa-solid fa-paw"></i> Посмотреть животное
-                                    </a>` : ''}
-                                    
-                                    <div class="donate-input-group">
-                                        <input type="number" id="donateAmount_${f.id}" placeholder="Сумма в ₽" min="1">
-                                        <button class="btn btn-primary" onclick="makeDonation(${f.id})">
-                                            <i class="fa-solid fa-heart"></i> Помочь
-                                        </button>
-                                    </div>
-                                    <div class="quick-amounts">
-                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 100)">100 ₽</button>
-                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 300)">300 ₽</button>
-                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 500)">500 ₽</button>
-                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 1000)">1000 ₽</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>'}
-                </div>
-            `;
-        } catch (error) {
-            content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
-        }
-    }
-    else if (tabId === 'search') {
-        content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
-        
-        try {
-            const animals = await API.Animal.search({ limit: 20 });
-            
-            content.innerHTML = `
-                <div class="card">
-                    <h2 class="card-title">Поиск животных</h2>
-                    <div class="search-box" style="margin-bottom: 2rem;">
-                        <select id="searchType" class="form-control">
-                            <option value="">Все виды</option>
-                            <option value="Cat">Кошки</option>
-                            <option value="Dog">Собаки</option>
-                            <option value="Bird">Птицы</option>
-                        </select>
-                        <select id="searchBreed" class="form-control">
-                            <option value="">Все породы</option>
-                        </select>
-                        <button onclick="searchAnimals()" class="btn btn-primary">
-                            <i class="fa-solid fa-search"></i> Искать
-                        </button>
-                    </div>
-
-                    <div id="searchResults" class="animals-grid">
-                        ${animals.length > 0 ? animals.map(animal => `
-                            <div class="animal-card">
-                                <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image">
-                                <div class="animal-info">
-                                    <div class="animal-header">
-                                        <h3 class="animal-name">${animal.Name}</h3>
-                                        <span class="animal-badge">${animal.Type}</span>
-                                    </div>
-                                    <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
-                                    <p class="animal-desc">${animal.Description}</p>
-                                    <div class="animal-actions">
-                                        <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
-                                            <i class="fa-solid fa-circle-info"></i> Подробнее
-                                        </button>
-                                        <button class="btn-donate" onclick="toggleFavoriteBtn(this, ${animal.id})">
-                                            <i class="fa-regular fa-heart"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Животные не найдены</p>'}
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
-        }
-    }
-    else if (tabId === 'profile') {
-        const profile = API.storage.getUserData();
-        
-        content.innerHTML = `
-            <div class="card" style="max-width: 600px;">
-                <h2 class="card-title">Мой профиль</h2>
-                <form id="profileForm">
-                    <div class="form-group">
-                        <label>Имя</label>
-                        <input type="text" id="profileFirstname" value="${profile?.FirstName || ''}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Фамилия</label>
-                        <input type="text" id="profileSurname" value="${profile?.Surname || ''}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Телефон</label>
-                        <input type="tel" id="profilePhone" value="${profile?.Phone || ''}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Город</label>
-                        <input type="text" id="profileLocation" value="${profile?.Location || ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>О себе</label>
-                        <textarea id="profileDescription" rows="4">${profile?.Description || ''}</textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">
-                        <i class="fa-solid fa-save"></i> Сохранить изменения
-                    </button>
-                </form>
-                
-                <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--gray-200);">
-                
-                <button class="btn btn-outline" style="width: 100%; color: #dc2626; border-color: #dc2626;" onclick="API.Auth.logout()">
-                    <i class="fa-solid fa-right-from-bracket"></i> Выйти из аккаунта
+                <h2 class="card-title" style="color: #dc2626;">Ошибка загрузки</h2>
+                <p>${error.message}</p>
+                <button class="btn btn-primary" onclick="switchTab('${tabId}')" style="margin-top: 1rem;">
+                    <i class="fa-solid fa-rotate-right"></i> Повторить
                 </button>
             </div>
         `;
-        
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const btn = e.target.querySelector('button[type="submit"]');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сохранение...';
-    
-    try {
-        const updateData = {
-            firstname: document.getElementById('profileFirstname').value.trim(),
-            surname: document.getElementById('profileSurname').value.trim(),
-            phone: document.getElementById('profilePhone').value.trim(),
-            location: document.getElementById('profileLocation').value.trim(),
-            description: document.getElementById('profileDescription').value.trim()
-        };
-        
-        console.log('Отправляем данные:', updateData);
-        
-        await API.User.updateProfile(updateData);
-        
-        console.log('Профиль обновлён, загружаем свежие данные...');
-        
-        // Принудительно перезагружаем профиль с сервера
-        await loadUserProfile(true);
-        
-        // Получаем обновлённые данные из localStorage
-        const profile = API.storage.getUserData();
-        console.log('Обновлённый профиль:', profile);
-        
-        // Обновляем поля формы новыми данными
-        if (profile) {
-            document.getElementById('profileFirstname').value = profile.FirstName || '';
-            document.getElementById('profileSurname').value = profile.Surname || '';
-            document.getElementById('profilePhone').value = profile.Phone || '';
-            document.getElementById('profileLocation').value = profile.Location || '';
-            document.getElementById('profileDescription').value = profile.Description || '';
-        }
-        
-        alert('✓ Профиль успешно обновлён!');
-        
-    } catch (error) {
-        console.error('Ошибка обновления:', error);
-        alert('Ошибка: ' + error.message);
-    }
-    
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-});
-    }
-
-        else if (tabId === 'my-donations') {
-        content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
-        
-        try {
-            const donations = await API.FundraiserAPI.getUserDonations(userId);
-            const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
-            
-            content.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card" style="border-left-color: #f97316;">
-                        <h3>Всего пожертвовано</h3>
-                        <div class="value">${totalAmount} ₽</div>
-                    </div>
-                    <div class="stat-card" style="border-left-color: #10b981;">
-                        <h3>Количество донатов</h3>
-                        <div class="value">${donations.length}</div>
-                    </div>
-                </div>
-
-                <h2 class="card-title" style="margin-bottom: 1.5rem;">История моих пожертвований</h2>
-                <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
-                    ${donations.length > 0 ? donations.map(d => `
-                        <div class="fundraiser-card">
-                            <div class="fundraiser-info">
-                                <h3 class="fundraiser-title">Сбор #${d.FundraiserID || d.id || '?'}</h3>
-                                <div style="font-size: 2rem; font-weight: bold; color: var(--primary); margin: 1rem 0;">
-                                    ${d.Amount} ₽
-                                </div>
-                                <div style="color: var(--gray-600); font-size: 0.875rem;">
-                                    <i class="fa-regular fa-calendar"></i> 
-                                    ${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric'
-                                    }) : 'Дата неизвестна'}
-                                </div>
-                            </div>
-                        </div>
-                    `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
-                </div>
-            `;
-        } catch (error) {
-            content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
-        }
     }
 }
 
-// Поиск животных
+// ==================== ВКЛАДКА: ГЛАВНАЯ ====================
+
+async function renderDashboard(content, userId) {
+    console.log('🏠 Загрузка главной...');
+    
+    const [animals, donations] = await Promise.all([
+        API.Animal.getUserAnimals(userId).catch(err => {
+            console.error('Ошибка загрузки животных:', err);
+            return [];
+        }),
+        API.FundraiserAPI.getUserDonations(userId).catch(err => {
+            console.error('Ошибка загрузки донатов:', err);
+            return [];
+        })
+    ]);
+    
+    const totalDonated = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
+    
+    content.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card" style="border-left-color: #3b82f6;">
+                <h3>Мои объявления</h3>
+                <div class="value">${animals.length}</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #f97316;">
+                <h3>Пожертвований</h3>
+                <div class="value">${donations.length}</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #10b981;">
+                <h3>Помощь оказана</h3>
+                <div class="value">${totalDonated} ₽</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Быстрые действия</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div class="quick-action-card" onclick="showAddAnimalModal()">
+                    <i class="fa-solid fa-circle-plus" style="font-size: 2rem; color: var(--primary);"></i>
+                    <h3>Разместить животное</h3>
+                    <p>Отдать даром, продать или собрать средства</p>
+                </div>
+                <div class="quick-action-card" onclick="showAddFundraiserModal()">
+                    <i class="fa-solid fa-hand-holding-dollar" style="font-size: 2rem; color: #10b981;"></i>
+                    <h3>Создать сбор</h3>
+                    <p>Открыть сбор средств на помощь животному</p>
+                </div>
+                <div class="quick-action-card" onclick="switchTab('search', 'Поиск')">
+                    <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; color: var(--secondary);"></i>
+                    <h3>Найти питомца</h3>
+                    <p>Ищите среди объявлений</p>
+                </div>
+            </div>
+        </div>
+
+        ${animals.length > 0 ? `
+            <div class="card">
+                <h2 class="card-title">Мои последние объявления</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Тип</th>
+                                <th>Цена</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${animals.slice(0, 5).map(animal => `
+                                <tr>
+                                    <td><strong>${animal.Name}</strong></td>
+                                    <td>${animal.Type}</td>
+                                    <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        ` : ''}
+    `;
+}
+
+// ==================== ВКЛАДКА: МОИ ЖИВОТНЫЕ ====================
+
+async function renderMyAnimals(content, userId) {
+    console.log('🐾 Загрузка моих животных...');
+    const animals = await API.Animal.getUserAnimals(userId);
+    
+    content.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h2 class="card-title" style="margin: 0;">Мои животные</h2>
+            <button class="btn btn-primary" onclick="showAddAnimalModal()">
+                <i class="fa-solid fa-plus"></i> Разместить объявление
+            </button>
+        </div>
+
+        <div class="card">
+            ${animals.length > 0 ? `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Тип</th>
+                                <th>Порода</th>
+                                <th>Возраст</th>
+                                <th>Цена</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${animals.map(animal => `
+                                <tr>
+                                    <td><strong>${animal.Name}</strong></td>
+                                    <td>${animal.Type}</td>
+                                    <td>${animal.Breed}</td>
+                                    <td>${animal.OrientatedAge} лет</td>
+                                    <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
+                                    <td>
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.25rem;" onclick="openAnimalDetailModal(${animal.id})">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteAnimal(${animal.id})">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            ` : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">У вас пока нет объявлений</p>'}
+        </div>
+    `;
+}
+
+// ==================== ВКЛАДКА: ЗАЯВКИ ====================
+
+function renderApplications(content) {
+    content.innerHTML = `
+        <div class="card">
+            <h2 class="card-title">Заявки на моих животных</h2>
+            <p style="text-align: center; padding: 2rem; color: var(--gray-600);">
+                <i class="fa-solid fa-comments" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+                Раздел заявок находится в разработке
+            </p>
+        </div>
+    `;
+}
+
+// ==================== ВКЛАДКА: ИЗБРАННОЕ ====================
+
+function renderFavorites(content) {
+    content.innerHTML = `
+        <h2 class="card-title" style="margin-bottom: 1.5rem;">Избранные животные</h2>
+        <div class="card">
+            <p style="text-align: center; padding: 2rem; color: var(--gray-600);">
+                <i class="fa-regular fa-heart" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+                У вас пока нет избранных животных
+            </p>
+        </div>
+    `;
+}
+
+// ==================== ВКЛАДКА: ПОЖЕРТВОВАНИЯ ====================
+
+async function renderFundraisers(content) {
+    console.log('💰 Загрузка сборов...');
+    const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
+    console.log(' Получено сборов:', fundraisers.length);
+    
+    // Сортируем по дате (новые сверху)
+    fundraisers.sort((a, b) => {
+        const dateA = new Date(a.CreatedAt || 0);
+        const dateB = new Date(b.CreatedAt || 0);
+        return dateB - dateA;
+    });
+    
+    content.innerHTML = `
+        <h2 class="card-title" style="margin-bottom: 1.5rem;">Активные сборы средств</h2>
+        <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+            ${fundraisers.length > 0 ? fundraisers.map(f => {
+                const collected = f.CollectedAmount || 0;
+                const goal = f.TargetAmount || 0;
+                const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
+                
+                return `
+                    <div class="fundraiser-card">
+                        <img src="${f.ImagePath || 'https://via.placeholder.com/500x300?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image">
+                        <div class="fundraiser-info">
+                            <h3 class="fundraiser-title">${f.Title}</h3>
+                            <p class="fundraiser-desc">${f.Description}</p>
+                            
+                            <div class="fundraiser-progress">
+                                <div class="fundraiser-meta">
+                                    <span style="font-weight: 600; color: var(--secondary);">${collected} ₽</span>
+                                    <span style="color: var(--gray-600);">из ${goal} ₽</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${percent}%;"></div>
+                                </div>
+                                <div style="text-align: right; font-size: 0.875rem; font-weight: 600; color: var(--secondary);">
+                                    ${percent}% собрано
+                                </div>
+                            </div>
+                            
+                            ${f.AnimalID ? `<a href="#" onclick="openAnimalDetailModal(${f.AnimalID}); return false;" class="fundraiser-animal-link">
+                                <i class="fa-solid fa-paw"></i> Посмотреть животное
+                            </a>` : ''}
+                            
+                            <div class="donate-input-group">
+                                <input type="number" id="donateAmount_${f.id}" placeholder="Сумма в ₽" min="1">
+                                <button class="btn btn-primary" onclick="makeDonation(${f.id})">
+                                    <i class="fa-solid fa-heart"></i> Помочь
+                                </button>
+                            </div>
+                            <div class="quick-amounts">
+                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 100)">100 ₽</button>
+                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 300)">300 ₽</button>
+                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 500)">500 ₽</button>
+                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 1000)">1000 ₽</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>'}
+        </div>
+    `;
+}
+
+// ==================== ВКЛАДКА: МОИ ДОНАТЫ ====================
+
+async function renderMyDonations(content, userId) {
+    console.log('🧾 Загрузка моих донатов...');
+    const donations = await API.FundraiserAPI.getUserDonations(userId);
+    console.log('📦 Получено донатов:', donations.length);
+    
+    const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
+    
+    content.innerHTML = `
+        <div class="stats-grid">
+            <div class="stat-card" style="border-left-color: #f97316;">
+                <h3>Всего пожертвовано</h3>
+                <div class="value">${totalAmount} ₽</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #10b981;">
+                <h3>Количество донатов</h3>
+                <div class="value">${donations.length}</div>
+            </div>
+        </div>
+
+        <h2 class="card-title" style="margin-bottom: 1.5rem;">История моих пожертвований</h2>
+        <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+            ${donations.length > 0 ? donations.map(d => `
+                <div class="fundraiser-card">
+                    <div class="fundraiser-info">
+                        <h3 class="fundraiser-title">Сбор #${d.FundraiserID || d.id || '?'}</h3>
+                        <div style="font-size: 2rem; font-weight: bold; color: var(--primary); margin: 1rem 0;">
+                            ${d.Amount} ₽
+                        </div>
+                        <div style="color: var(--gray-600); font-size: 0.875rem;">
+                            <i class="fa-regular fa-calendar"></i> 
+                            ${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            }) : 'Дата неизвестна'}
+                        </div>
+                    </div>
+                </div>
+            `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
+        </div>
+    `;
+}
+
+// ==================== ВКЛАДКА: ПОИСК ====================
+
+async function renderSearch(content) {
+    console.log(' Загрузка поиска...');
+    const animals = await API.Animal.search({ limit: 20 });
+    
+    content.innerHTML = `
+        <div class="card">
+            <h2 class="card-title">Поиск животных</h2>
+            <div class="search-box" style="margin-bottom: 2rem;">
+                <select id="searchType" class="form-control">
+                    <option value="">Все виды</option>
+                    <option value="Cat">Кошки</option>
+                    <option value="Dog">Собаки</option>
+                    <option value="Bird">Птицы</option>
+                </select>
+                <select id="searchBreed" class="form-control">
+                    <option value="">Все породы</option>
+                </select>
+                <button onclick="searchAnimals()" class="btn btn-primary">
+                    <i class="fa-solid fa-search"></i> Искать
+                </button>
+            </div>
+
+            <div id="searchResults" class="animals-grid">
+                ${animals.length > 0 ? animals.map(animal => `
+                    <div class="animal-card">
+                        <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image">
+                        <div class="animal-info">
+                            <div class="animal-header">
+                                <h3 class="animal-name">${animal.Name}</h3>
+                                <span class="animal-badge">${animal.Type}</span>
+                            </div>
+                            <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
+                            <p class="animal-desc">${animal.Description}</p>
+                            <div class="animal-actions">
+                                <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
+                                    <i class="fa-solid fa-circle-info"></i> Подробнее
+                                </button>
+                                <button class="btn-donate" onclick="toggleFavoriteBtn(this, ${animal.id})">
+                                    <i class="fa-regular fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Животные не найдены</p>'}
+            </div>
+        </div>
+    `;
+}
+
+// ==================== ВКЛАДКА: ПРОФИЛЬ ====================
+
+function renderProfile(content) {
+    const profile = API.storage.getUserData() || {};
+    
+    const firstName = getField(profile, 'FirstName', 'firstname');
+    const surname = getField(profile, 'Surname', 'surname');
+    const lastname = getField(profile, 'Lastname', 'lastname');
+    const phone = getField(profile, 'Phone', 'phone');
+    const location = getField(profile, 'Location', 'location');
+    const description = getField(profile, 'Description', 'description');
+    
+    content.innerHTML = `
+        <div class="card" style="max-width: 600px;">
+            <h2 class="card-title">Мой профиль</h2>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label>Имя *</label>
+                    <input type="text" id="profileFirstname" value="${firstName}" required>
+                </div>
+                <div class="form-group">
+                    <label>Отчество</label>
+                    <input type="text" id="profileLastname" value="${lastname}">
+                </div>
+                <div class="form-group">
+                    <label>Фамилия *</label>
+                    <input type="text" id="profileSurname" value="${surname}" required>
+                </div>
+                <div class="form-group">
+                    <label>Телефон *</label>
+                    <input type="tel" id="profilePhone" value="${phone}" required>
+                </div>
+                <div class="form-group">
+                    <label>Город</label>
+                    <input type="text" id="profileLocation" value="${location}">
+                </div>
+                <div class="form-group">
+                    <label>О себе</label>
+                    <textarea id="profileDescription" rows="4">${description}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fa-solid fa-save"></i> Сохранить изменения
+                </button>
+            </form>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--gray-200);">
+            
+            <button class="btn btn-outline" style="width: 100%; color: #dc2626; border-color: #dc2626;" onclick="API.Auth.logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Выйти из аккаунта
+            </button>
+        </div>
+    `;
+    
+    // Обработчик формы
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const btn = e.target.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сохранение...';
+        
+        try {
+            const updateData = {
+                firstname: document.getElementById('profileFirstname').value.trim(),
+                lastname: document.getElementById('profileLastname').value.trim(),
+                surname: document.getElementById('profileSurname').value.trim(),
+                phone: document.getElementById('profilePhone').value.trim(),
+                location: document.getElementById('profileLocation').value.trim(),
+                description: document.getElementById('profileDescription').value.trim()
+            };
+            
+            console.log('📤 Отправка данных профиля:', updateData);
+            
+            await API.User.updateProfile(updateData);
+            console.log('✅ Профиль обновлён на сервере');
+            
+            // Принудительно перезагружаем профиль
+            await loadUserProfile(true);
+            
+            alert('✓ Профиль успешно обновлён!');
+            
+        } catch (error) {
+            console.error('❌ Ошибка обновления:', error);
+            alert('Ошибка: ' + error.message);
+        }
+        
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+// ==================== ФУНКЦИИ ПОЖЕРТВОВАНИЙ ====================
+
+function setDonateAmount(fundraiserId, amount) {
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    if (input) input.value = amount;
+}
+
+async function makeDonation(fundraiserId) {
+    if (!API.Auth.isAuthenticated()) {
+        alert('Войдите в аккаунт, чтобы сделать пожертвование');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    const amount = parseInt(input?.value);
+    
+    if (!amount || amount < 1) {
+        alert('Введите корректную сумму');
+        return;
+    }
+    
+    if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) return;
+    
+    try {
+        await API.FundraiserAPI.donate(fundraiserId, amount);
+        alert(`Спасибо! Вы пожертвовали ${amount} ₽`);
+        input.value = '';
+        switchTab('fundraisers', 'Пожертвования');
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+    }
+}
+
+// ==================== ПОИСК ЖИВОТНЫХ ====================
+
 async function searchAnimals() {
     const type = document.getElementById('searchType').value;
     const breed = document.getElementById('searchBreed').value;
@@ -586,7 +714,8 @@ async function searchAnimals() {
     }
 }
 
-// Удаление животного
+// ==================== УДАЛЕНИЕ ЖИВОТНОГО ====================
+
 async function deleteAnimal(animalId) {
     if (!confirm('Вы уверены, что хотите удалить это объявление?')) return;
     
@@ -599,7 +728,6 @@ async function deleteAnimal(animalId) {
     }
 }
 
-// Избранное
 function toggleFavoriteBtn(btn, animalId) {
     const icon = btn.querySelector('i');
     if (icon.classList.contains('fa-regular')) {
@@ -693,7 +821,6 @@ function showAddAnimalModal() {
     `;
     
     document.body.appendChild(modal);
-    
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeAddAnimalModal();
     });
@@ -781,7 +908,6 @@ function showAddFundraiserModal() {
     `;
     
     document.body.appendChild(modal);
-    
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeAddFundraiserModal();
     });
@@ -917,11 +1043,21 @@ function closeAnimalDetailModal() {
 }
 
 function handleAdoptRequest(animalName) {
+    if (!API.Auth.isAuthenticated()) {
+        alert('Войдите в аккаунт, чтобы оставить заявку');
+        window.location.href = 'login.html';
+        return;
+    }
     alert(`Заявка на "${animalName}" отправлена!`);
     closeAnimalDetailModal();
 }
 
 function handleContact(animalName) {
+    if (!API.Auth.isAuthenticated()) {
+        alert('Войдите в аккаунт, чтобы связаться с владельцем');
+        window.location.href = 'login.html';
+        return;
+    }
     alert(`Открываем чат с владельцем "${animalName}"`);
 }
 
@@ -947,44 +1083,5 @@ function shareAnimal(animalId) {
     } else {
         navigator.clipboard.writeText(window.location.href);
         alert('Ссылка скопирована!');
-    }
-}   
-
-// Установить сумму пожертвования
-function setDonateAmount(fundraiserId, amount) {
-    const input = document.getElementById(`donateAmount_${fundraiserId}`);
-    if (input) {
-        input.value = amount;
-    }
-}
-
-// Сделать пожертвование
-async function makeDonation(fundraiserId) {
-    if (!API.Auth.isAuthenticated()) {
-        alert('Войдите в аккаунт, чтобы сделать пожертвование');
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    const input = document.getElementById(`donateAmount_${fundraiserId}`);
-    const amount = parseInt(input?.value);
-    
-    if (!amount || amount < 1) {
-        alert('Введите корректную сумму');
-        return;
-    }
-    
-    if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) {
-        return;
-    }
-    
-    try {
-        await API.FundraiserAPI.donate(fundraiserId, amount);
-        alert(`Спасибо! Вы пожертвовали ${amount} ₽`);
-        input.value = '';
-        // Обновляем вкладку
-        switchTab('donations', 'Мои пожертвования');
-    } catch (error) {
-        alert('Ошибка: ' + error.message);
     }
 }
