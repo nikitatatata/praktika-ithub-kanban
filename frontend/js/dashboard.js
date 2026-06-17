@@ -8,7 +8,7 @@ function checkAuth() {
 }
 
 // Загрузка профиля пользователя
-async function loadUserProfile() {
+async function loadUserProfile(forceRefresh = false) {
     const credentials = API.storage.getCredentials();
     if (!credentials || !credentials.userId) {
         console.warn('userId не найден в credentials');
@@ -16,13 +16,19 @@ async function loadUserProfile() {
     }
     
     try {
-        // Сначала пробуем из кеша
-        let profile = API.storage.getUserData();
+        let profile;
         
-        // Если в кеше нет или ID не совпадает - загружаем с сервера
-        if (!profile || profile.id !== credentials.userId) {
+        // Если forceRefresh = true, всегда загружаем с сервера
+        if (forceRefresh) {
             profile = await API.User.getProfile(credentials.userId);
             API.storage.setUserData(profile);
+        } else {
+            // Иначе пробуем из кеша
+            profile = API.storage.getUserData();
+            if (!profile || profile.id !== credentials.userId) {
+                profile = await API.User.getProfile(credentials.userId);
+                API.storage.setUserData(profile);
+            }
         }
         
         const fullName = `${profile.FirstName || ''} ${profile.Surname || ''}`.trim();
@@ -33,9 +39,10 @@ async function loadUserProfile() {
         const initials = (profile.FirstName?.[0] || '') + (profile.Surname?.[0] || '');
         document.getElementById('userAvatar').textContent = initials || 'П';
         
+        console.log('Профиль загружен:', profile);
+        
     } catch (error) {
         console.error('Error loading profile:', error);
-        // Если не удалось загрузить - показываем email
         document.getElementById('userName').textContent = credentials.email;
         document.getElementById('userRole').textContent = 'Пользователь';
     }
@@ -438,30 +445,43 @@ async function renderContent(tabId) {
         `;
         
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сохранение...';
-            
-            try {
-                await API.User.updateProfile({
-                    firstname: document.getElementById('profileFirstname').value,
-                    surname: document.getElementById('profileSurname').value,
-                    phone: document.getElementById('profilePhone').value,
-                    location: document.getElementById('profileLocation').value,
-                    description: document.getElementById('profileDescription').value
-                });
-                
-                alert('Профиль успешно обновлён!');
-                await loadUserProfile();
-            } catch (error) {
-                alert('Ошибка: ' + error.message);
-            }
-            
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-save"></i> Сохранить изменения';
+    e.preventDefault();
+    
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Сохранение...';
+    
+    try {
+        await API.User.updateProfile({
+            firstname: document.getElementById('profileFirstname').value,
+            surname: document.getElementById('profileSurname').value,
+            phone: document.getElementById('profilePhone').value,
+            location: document.getElementById('profileLocation').value,
+            description: document.getElementById('profileDescription').value
         });
+        
+        alert('Профиль успешно обновлён!');
+        
+        // Принудительно перезагружаем профиль с сервера
+        await loadUserProfile(true);
+        
+        // Обновляем поля формы новыми данными
+        const profile = API.storage.getUserData();
+        if (profile) {
+            document.getElementById('profileFirstname').value = profile.FirstName || '';
+            document.getElementById('profileSurname').value = profile.Surname || '';
+            document.getElementById('profilePhone').value = profile.Phone || '';
+            document.getElementById('profileLocation').value = profile.Location || '';
+            document.getElementById('profileDescription').value = profile.Description || '';
+        }
+        
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+    }
+    
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-save"></i> Сохранить изменения';
+    });
     }
 
         else if (tabId === 'my-donations') {
