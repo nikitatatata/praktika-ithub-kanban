@@ -218,51 +218,53 @@
     <!-- Потом инлайн-скрипт с обработчиком формы -->
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const password = document.getElementById('password').value;
-            const passwordConfirm = document.getElementById('passwordConfirm').value;
-            
-            if (password !== passwordConfirm) {
-                showError('Пароли не совпадают');
-                return;
-            }
-            
-            const userData = {
-                firstname: document.getElementById('firstname').value,
-                surname: document.getElementById('surname').value,
-                lastname: document.getElementById('lastname').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                password: password,
-                location: document.getElementById('location').value,
-                description: document.getElementById('description').value
-            };
-            
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Регистрация...';
-            
-            try {
-                const success = await API.Auth.register(userData);
-                
-                if (success) {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    throw new Error('Регистрация не удалась. Возможно, пользователь с таким email уже существует.');
-                }
-            } catch (error) {
-                showError(error.message);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Зарегистрироваться';
-            }
-        });
+    e.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
+    
+    if (password !== passwordConfirm) {
+        showError('Пароли не совпадают');
+        return;
+    }
+    
+    const userData = {
+        firstname: document.getElementById('firstname').value,
+        surname: document.getElementById('surname').value,
+        lastname: document.getElementById('lastname').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        password: password,
+        location: document.getElementById('location').value,
+        description: document.getElementById('description').value
+    };
+    
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Регистрация...';
+    
+    try {
+        const result = await API.Auth.register(userData);
         
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            errorMessage.textContent = message;
-            errorMessage.classList.add('show');
+        if (result.success) {
+            window.location.href = 'dashboard.html';
+        } else {
+            showError(result.error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Зарегистрироваться';
         }
+    } catch (error) {
+        showError('Ошибка соединения с сервером');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Зарегистрироваться';
+    }
+});
+
+function showError(message) {
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = message;
+    errorMessage.classList.add('show');
+}
     </script>
 </body>
 </html>

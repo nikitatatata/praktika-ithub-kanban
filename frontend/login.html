@@ -163,33 +163,37 @@
     
         <script src="js/api.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const submitBtn = document.getElementById('submitBtn');
-            const errorMessage = document.getElementById('errorMessage');
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Вход...';
-            errorMessage.classList.remove('show');
-            
-            try {
-                const success = await API.Auth.login(email, password);
-                
-                if (success) {
-                    window.location.href = 'dashboard.html';
-                } else {
-                    throw new Error('Неверный email или пароль');
-                }
-            } catch (error) {
-                errorMessage.textContent = error.message;
-                errorMessage.classList.add('show');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
-            }
-        });
+        
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Вход...';
+    errorMessage.classList.remove('show');
+    
+    try {
+        const result = await API.Auth.login(email, password);
+        
+        if (result.success) {
+            window.location.href = 'dashboard.html';
+        } else {
+            errorMessage.textContent = result.error;
+            errorMessage.classList.add('show');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
+        }
+    } catch (error) {
+        errorMessage.textContent = 'Ошибка соединения с сервером';
+        errorMessage.classList.add('show');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
+    }
+});
     </script>
 </body>
 </html>

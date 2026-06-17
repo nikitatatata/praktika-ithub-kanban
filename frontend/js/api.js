@@ -51,7 +51,7 @@ async function apiRequest(endpoint, options = {}) {
         }
     };
     
-    // Не устанавливаем Content-Type для FormData (браузер сам установит с boundary)
+    // Не устанавливаем Content-Type для FormData
     if (!(options.body instanceof FormData)) {
         if (!config.headers['Content-Type']) {
             config.headers['Content-Type'] = 'application/json';
@@ -61,30 +61,39 @@ async function apiRequest(endpoint, options = {}) {
     try {
         const response = await fetch(endpoint, config);
         
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API Error ${response.status}: ${errorText}`);
-        }
+        // Сохраняем статус для обработки
+        const status = response.status;
         
         // 204 No Content
-        if (response.status === 204) {
-            return null;
+        if (status === 204) {
+            return { success: true, data: null };
         }
         
-        // Пробуем распарсить как JSON
+        // Пробуем распарсить ответ
+        let data;
         const contentType = response.headers.get('content-type');
+        
         if (contentType && contentType.includes('application/json')) {
-            return await response.json();
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            if (text === 'true') data = true;
+            else if (text === 'false') data = false;
+            else data = text;
         }
         
-        // Иначе возвращаем текст
-        const text = await response.text();
+        // Если ответ успешный
+        if (response.ok) {
+            return { success: true, data: data };
+        }
         
-        // Пробуем распарсить как boolean
-        if (text === 'true') return true;
-        if (text === 'false') return false;
+        // Если ошибка - возвращаем объект с кодом и данными
+        return { 
+            success: false, 
+            status: status, 
+            data: data 
+        };
         
-        return text;
     } catch (error) {
         console.error('API Request failed:', error);
         throw error;
@@ -109,13 +118,23 @@ const AuthAPI = {
             body: formData.toString()
         });
         
-        if (response === true) {
-            // Временно userId = null, получим позже
+        if (response.success && response.data === true) {
             storage.setCredentials(email, passwordHash, null);
-            return true;
+            return { success: true };
         }
         
-        return false;
+        // Ошибка 403 - пользователь не найден или неверный пароль
+        if (response.status === 403) {
+            return { 
+                success: false, 
+                error: 'Пользователь с таким email не найден или неверный пароль' 
+            };
+        }
+        
+        return { 
+            success: false, 
+            error: 'Ошибка входа. Попробуйте позже.' 
+        };
     },
     
     async register(userData) {
@@ -140,12 +159,23 @@ const AuthAPI = {
             body: formData.toString()
         });
         
-        if (response === true) {
+        if (response.success && response.data === true) {
             storage.setCredentials(userData.email, passwordHash, null);
-            return true;
+            return { success: true };
         }
         
-        return false;
+        // Ошибка 409 - пользователь уже существует
+        if (response.status === 409) {
+            return { 
+                success: false, 
+                error: 'Пользователь с таким email уже существует' 
+            };
+        }
+        
+        return { 
+            success: false, 
+            error: 'Ошибка регистрации. Попробуйте позже.' 
+        };
     },
     
     logout() {
