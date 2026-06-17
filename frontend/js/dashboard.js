@@ -46,7 +46,8 @@ const menuItems = [
     { id: 'my-animals', icon: 'fa-paw', label: 'Мои животные' },
     { id: 'applications', icon: 'fa-comments', label: 'Заявки' },
     { id: 'favorites', icon: 'fa-heart', label: 'Избранное' },
-    { id: 'donations', icon: 'fa-hand-holding-dollar', label: 'Мои пожертвования' },
+    { id: 'fundraisers', icon: 'fa-hand-holding-dollar', label: 'Пожертвования' },
+    { id: 'my-donations', icon: 'fa-receipt', label: 'Мои донаты' },
     { id: 'search', icon: 'fa-magnifying-glass', label: 'Поиск' },
     { id: 'profile', icon: 'fa-user', label: 'Профиль' }
 ];
@@ -275,49 +276,68 @@ async function renderContent(tabId) {
             </div>
         `;
     }
-    else if (tabId === 'donations') {
+        else if (tabId === 'donations') {
         content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
         
         try {
-            const donations = await API.FundraiserAPI.getUserDonations(userId);
-            const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
+            // Загружаем все сборы (новые сверху)
+            const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
+            
+            // Сортируем по дате (новые сверху)
+            fundraisers.sort((a, b) => {
+                const dateA = new Date(a.CreatedAt || 0);
+                const dateB = new Date(b.CreatedAt || 0);
+                return dateB - dateA;
+            });
             
             content.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card" style="border-left-color: #f97316;">
-                        <h3>Всего пожертвовано</h3>
-                        <div class="value">${totalAmount} ₽</div>
-                    </div>
-                    <div class="stat-card" style="border-left-color: #10b981;">
-                        <h3>Помощи оказано</h3>
-                        <div class="value">${donations.length}</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h2 class="card-title">История пожертвований</h2>
-                    ${donations.length > 0 ? `
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Сбор</th>
-                                        <th>Сумма</th>
-                                        <th>Дата</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${donations.map(d => `
-                                        <tr>
-                                            <td><strong>Сбор #${d.FundraiserID || d.id || '?'}</strong></td>
-                                            <td><strong>${d.Amount} ₽</strong></td>
-                                            <td>${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU') : '-'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    ` : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
+                <h2 class="card-title" style="margin-bottom: 1.5rem;">Активные сборы средств</h2>
+                <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+                    ${fundraisers.length > 0 ? fundraisers.map(f => {
+                        const collected = f.CollectedAmount || 0;
+                        const goal = f.TargetAmount || 0;
+                        const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
+                        
+                        return `
+                            <div class="fundraiser-card">
+                                <img src="${f.ImagePath || 'https://via.placeholder.com/500x300?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image">
+                                <div class="fundraiser-info">
+                                    <h3 class="fundraiser-title">${f.Title}</h3>
+                                    <p class="fundraiser-desc">${f.Description}</p>
+                                    
+                                    <div class="fundraiser-progress">
+                                        <div class="fundraiser-meta">
+                                            <span style="font-weight: 600; color: var(--secondary);">${collected} ₽</span>
+                                            <span style="color: var(--gray-600);">из ${goal} ₽</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: ${percent}%;"></div>
+                                        </div>
+                                        <div style="text-align: right; font-size: 0.875rem; font-weight: 600; color: var(--secondary);">
+                                            ${percent}% собрано
+                                        </div>
+                                    </div>
+                                    
+                                    ${f.AnimalID ? `<a href="#" onclick="openAnimalDetailModal(${f.AnimalID}); return false;" class="fundraiser-animal-link">
+                                        <i class="fa-solid fa-paw"></i> Посмотреть животное
+                                    </a>` : ''}
+                                    
+                                    <div class="donate-input-group">
+                                        <input type="number" id="donateAmount_${f.id}" placeholder="Сумма в ₽" min="1">
+                                        <button class="btn btn-primary" onclick="makeDonation(${f.id})">
+                                            <i class="fa-solid fa-heart"></i> Помочь
+                                        </button>
+                                    </div>
+                                    <div class="quick-amounts">
+                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 100)">100 ₽</button>
+                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 300)">300 ₽</button>
+                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 500)">500 ₽</button>
+                                        <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 1000)">1000 ₽</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>'}
                 </div>
             `;
         } catch (error) {
@@ -442,6 +462,52 @@ async function renderContent(tabId) {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-save"></i> Сохранить изменения';
         });
+    }
+
+        else if (tabId === 'my-donations') {
+        content.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
+        
+        try {
+            const donations = await API.FundraiserAPI.getUserDonations(userId);
+            const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
+            
+            content.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-left-color: #f97316;">
+                        <h3>Всего пожертвовано</h3>
+                        <div class="value">${totalAmount} ₽</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #10b981;">
+                        <h3>Количество донатов</h3>
+                        <div class="value">${donations.length}</div>
+                    </div>
+                </div>
+
+                <h2 class="card-title" style="margin-bottom: 1.5rem;">История моих пожертвований</h2>
+                <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                    ${donations.length > 0 ? donations.map(d => `
+                        <div class="fundraiser-card">
+                            <div class="fundraiser-info">
+                                <h3 class="fundraiser-title">Сбор #${d.FundraiserID || d.id || '?'}</h3>
+                                <div style="font-size: 2rem; font-weight: bold; color: var(--primary); margin: 1rem 0;">
+                                    ${d.Amount} ₽
+                                </div>
+                                <div style="color: var(--gray-600); font-size: 0.875rem;">
+                                    <i class="fa-regular fa-calendar"></i> 
+                                    ${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    }) : 'Дата неизвестна'}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
+                </div>
+            `;
+        } catch (error) {
+            content.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
+        }
     }
 }
 
@@ -849,3 +915,42 @@ function shareAnimal(animalId) {
         alert('Ссылка скопирована!');
     }
 }   
+
+// Установить сумму пожертвования
+function setDonateAmount(fundraiserId, amount) {
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    if (input) {
+        input.value = amount;
+    }
+}
+
+// Сделать пожертвование
+async function makeDonation(fundraiserId) {
+    if (!API.Auth.isAuthenticated()) {
+        alert('Войдите в аккаунт, чтобы сделать пожертвование');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    const amount = parseInt(input?.value);
+    
+    if (!amount || amount < 1) {
+        alert('Введите корректную сумму');
+        return;
+    }
+    
+    if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) {
+        return;
+    }
+    
+    try {
+        await API.FundraiserAPI.donate(fundraiserId, amount);
+        alert(`Спасибо! Вы пожертвовали ${amount} ₽`);
+        input.value = '';
+        // Обновляем вкладку
+        switchTab('donations', 'Мои пожертвования');
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+    }
+}

@@ -61,6 +61,7 @@
     </header>
 
     <!-- Как это работает -->
+        <!-- Как это работает -->
     <section class="how-it-works" id="how-it-works">
         <div class="container">
             <h2 class="section-title">Как это работает</h2>
@@ -70,7 +71,7 @@
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </div>
                     <h3>Ищите животных</h3>
-                    <p>Найдите питомца по параметрам: вид, возраст, порода, местоположение</p>
+                    <p>Найдите питомца по параметрам: вид, возраст, порода, стоимость</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -84,49 +85,109 @@
                         <i class="fa-solid fa-hand-holding-dollar"></i>
                     </div>
                     <h3>Помогайте финансово</h3>
-                    <p>Поддержите сборы на лечение или помогите приюту кормом и медикаментами</p>
+                    <p>Поддержите сборы на лечение или помогите конкретному животному</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <i class="fa-solid fa-circle-plus"></i>
                     </div>
                     <h3>Размещайте объявления</h3>
-                    <p>Найдите дом для животного: отдайте даром, продайте или создайте сбор средств</p>
+                    <p>Найдите дом для животного: отдайте даром, продайте или создайте сбор</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Секция "О нас" -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <h2 class="section-title">О проекте «Лапы, крылья и хвосты»</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>
+                        <strong>«Лапы, крылья и хвосты»</strong> — это единая платформа, которая объединяет 
+                        людей, желающих помочь животным. Мы создали пространство, где каждый может найти 
+                        нового друга, отдать животное в добрые руки или поддержать тех, кто нуждается в помощи.
+                    </p>
+                    <p>
+                        Наша миссия — сделать помощь животным простой, прозрачной и доступной. 
+                        Мы верим, что у каждого питомца должен быть дом, а у каждого человека — 
+                        возможность сделать доброе дело.
+                    </p>
+                    <div class="about-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">1000+</div>
+                            <div class="stat-label">Животных нашли дом</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">Активных пользователей</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">50+</div>
+                            <div class="stat-label">Успешных сборов</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=600&q=80" alt="О нас">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Секция призыва к действию -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Готовы помочь?</h2>
+            <p>Присоединяйтесь к нашему сообществу и измените чью-то жизнь к лучшему</p>
+            <div class="cta-buttons">
+                <a href="register.html" class="btn btn-primary btn-lg">Создать аккаунт</a>
+                <a href="#animals" class="btn btn-outline btn-lg" style="border-color: white; color: white;">Посмотреть животных</a>
+            </div>
+        </div>
+    </section>
+
     <!-- Поиск и фильтрация -->
+        <!-- Поиск и фильтрация -->
     <section class="search-section">
         <div class="container">
             <h2 class="section-title">Найдите своего друга</h2>
+            
+            <!-- Сортировка -->
+            <div class="sort-controls" style="background: white; padding: 1rem; border-radius: 1rem; box-shadow: var(--shadow); margin-bottom: 1rem;">
+                <label for="animalSort"><i class="fa-solid fa-arrow-down-wide-short"></i> Сортировка:</label>
+                <select id="animalSort" onchange="handleSortChange(event)">
+                    <option value="newest">Сначала новые</option>
+                    <option value="oldest">Сначала старые</option>
+                    <option value="cheap">Сначала дешёвые</option>
+                    <option value="expensive">Сначала дорогие</option>
+                    <option value="young">Сначала молодые</option>
+                    <option value="old">Сначала взрослые</option>
+                    <option value="free">Только бесплатные</option>
+                    <option value="sterilized">Только стерилизованные</option>
+                </select>
+            </div>
+            
             <div class="search-box">
                 <select id="animalType" class="form-control">
                     <option value="">Все виды</option>
-                    <option value="dog">Собаки</option>
-                    <option value="cat">Кошки</option>
-                    <option value="bird">Птицы</option>
-                    <option value="rodent">Грызуны</option>
-                    <option value="other">Другие</option>
+                    <option value="Cat">Кошки</option>
+                    <option value="Dog">Собаки</option>
+                    <option value="Bird">Птицы</option>
+                    <option value="Other">Другие</option>
                 </select>
                 <select id="animalPurpose" class="form-control">
-                    <option value="">Цель</option>
-                    <option value="free">Отдам даром</option>
-                    <option value="sale">Продам</option>
-                    <option value="fundraising">Сбор средств</option>
+                    <option value="">Любая стоимость</option>
+                    <option value="free">Бесплатно</option>
+                    <option value="sale">Продажа</option>
                 </select>
                 <select id="animalAge" class="form-control">
                     <option value="">Любой возраст</option>
-                    <option value="baby">Щенок/Котёнок</option>
-                    <option value="young">Молодой</option>
-                    <option value="adult">Взрослый</option>
-                    <option value="senior">Пожилой</option>
-                </select>
-                <select id="animalGender" class="form-control">
-                    <option value="">Любой пол</option>
-                    <option value="male">Мальчик</option>
-                    <option value="female">Девочка</option>
+                    <option value="0">До 1 года</option>
+                    <option value="1">1-3 года</option>
+                    <option value="3">3-7 лет</option>
+                    <option value="7">Старше 7 лет</option>
                 </select>
                 <button onclick="filterAnimals()" class="btn btn-primary">
                     <i class="fa-solid fa-search"></i> Найти

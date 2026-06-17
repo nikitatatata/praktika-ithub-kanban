@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя | Лапы, крылья и хвосты</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #14b8a6 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        
+        .profile-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            margin-top: -3rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            border: 4px solid white;
+            box-shadow: var(--shadow);
+        }
+        
+        .profile-info h1 {
+            font-size: 2rem;
+            margin: 1rem 0 0.5rem;
+        }
+        
+        .profile-meta {
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+        }
+        
+        .profile-meta i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .profile-description {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            line-height: 1.7;
+            color: var(--gray-600);
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-paw"></i>
+                <span>Лапы, крылья и хвосты</span>
+            </a>
+            <div class="nav-actions">
+                <a href="login.html" class="btn btn-outline">Войти</a>
+                <a href="register.html" class="btn btn-primary">Регистрация</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Шапка профиля -->
+    <header class="profile-header">
+        <div class="container"></div>
+    </header>
+
+    <!-- Контент профиля -->
+    <section style="padding-bottom: 4rem;">
+        <div class="container">
+            <div class="profile-card">
+                <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                    <div class="profile-avatar" id="profileAvatar">?</div>
+                    <div class="profile-info">
+                        <h1 id="profileName">Загрузка...</h1>
+                        <div class="profile-meta">
+                            <span id="profileLocation"><i class="fa-solid fa-location-dot"></i> -</span>
+                        </div>
+                        <div class="profile-meta">
+                            <span id="profilePhone"><i class="fa-solid fa-phone"></i> -</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-description" id="profileDescription">
+                    Описание пользователя...
+                </div>
+            </div>
+
+            <h2 style="font-size: 1.75rem; margin: 3rem 0 1.5rem;">Объявления пользователя</h2>
+            <div id="userAnimals" class="animals-grid">
+                <p style="text-align: center; padding: 2rem;">Загрузка...</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 Лапы, крылья и хвосты. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Получаем ID пользователя из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+
+        async function loadProfile() {
+            if (!userId) {
+                document.getElementById('profileName').textContent = 'Пользователь не найден';
+                return;
+            }
+
+            try {
+                const profile = await API.User.getProfile(parseInt(userId));
+                
+                const fullName = `${profile.FirstName || ''} ${profile.Surname || ''}`.trim();
+                document.getElementById('profileName').textContent = fullName || 'Пользователь';
+                document.getElementById('profileAvatar').textContent = (profile.FirstName?.[0] || '?').toUpperCase();
+                document.getElementById('profileLocation').innerHTML = profile.Location 
+                    ? `<i class="fa-solid fa-location-dot"></i> ${profile.Location}`
+                    : '<i class="fa-solid fa-location-dot"></i> Местоположение не указано';
+                document.getElementById('profilePhone').innerHTML = profile.Phone
+                    ? `<i class="fa-solid fa-phone"></i> ${profile.Phone}`
+                    : '<i class="fa-solid fa-phone"></i> Телефон не указан';
+                document.getElementById('profileDescription').textContent = profile.Description || 'Пользователь не добавил описание';
+
+                // Загружаем животных пользователя
+                const animals = await API.Animal.getUserAnimals(parseInt(userId));
+                const grid = document.getElementById('userAnimals');
+                
+                if (animals.length === 0) {
+                    grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">У пользователя пока нет объявлений</p>';
+                } else {
+                    grid.innerHTML = animals.map(animal => {
+                        const priceHtml = animal.Cost > 0 
+                            ? `<span class="purpose-badge purpose-sale">${animal.Cost} ₽</span>`
+                            : '<span class="purpose-badge purpose-free">Отдам даром</span>';
+                        
+                        return `
+                            <div class="animal-card">
+                                <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image">
+                                <div class="animal-info">
+                                    <div class="animal-header">
+                                        <h3 class="animal-name">${animal.Name}</h3>
+                                        <span class="animal-badge">${animal.Type}</span>
+                                    </div>
+                                    <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
+                                    ${priceHtml}
+                                    <p class="animal-desc">${animal.Description}</p>
+                                    <div class="animal-actions">
+                                        <button class="btn-adopt" onclick="alert('Перейдите на главную, чтобы увидеть подробную карточку')">
+                                            <i class="fa-solid fa-circle-info"></i> Подробнее
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                document.getElementById('profileName').textContent = 'Пользователь не найден';
+                document.getElementById('userAnimals').innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>
