@@ -31,9 +31,10 @@ async function loadUserProfile(forceRefresh = false) {
         let profile;
         
         if (forceRefresh) {
-            console.log(' Принудительная загрузка профиля...');
+            console.log('🔄 Принудительная загрузка профиля...');
             profile = await API.User.getProfile(credentials.userId);
-            console.log('📦 Получен профиль:', profile);
+            console.log('📦 Получен профиль с сервера:', profile);
+            console.log('📋 Все ключи профиля:', Object.keys(profile));
             API.storage.setUserData(profile);
         } else {
             profile = API.storage.getUserData();
@@ -44,22 +45,28 @@ async function loadUserProfile(forceRefresh = false) {
             }
         }
         
-        // Получаем поля регистронезависимо
-        const firstName = getField(profile, 'FirstName', 'firstname', 'firstName');
-        const surname = getField(profile, 'Surname', 'surname', 'lastName');
-        const lastname = getField(profile, 'Lastname', 'lastname', 'middleName');
-        const phone = getField(profile, 'Phone', 'phone');
-        const location = getField(profile, 'Location', 'location');
-        const description = getField(profile, 'Description', 'description');
+        // Получаем все возможные варианты написания полей
+        const firstName = profile.FirstName || profile.firstname || profile.firstName || '';
+        const surname = profile.Surname || profile.surname || profile.lastName || '';
+        const lastname = profile.Lastname || profile.lastname || profile.middleName || '';
+        const phone = profile.Phone || profile.phone || '';
+        const location = profile.Location || profile.location || '';
+        const description = profile.Description || profile.description || '';
         
-        console.log('👤 Обработанные данные:', { firstName, surname, lastname, phone, location, description });
+        console.log('👤 Обработанные данные:', { 
+            firstName, 
+            surname, 
+            lastname, 
+            phone, 
+            location, 
+            description 
+        });
         
-        // Обновляем боковое меню (имя + фамилия, без отчества)
+        // Обновляем боковое меню
         const shortName = `${firstName} ${surname}`.trim() || 'Пользователь';
         document.getElementById('userName').textContent = shortName;
         document.getElementById('userRole').textContent = description || 'Пользователь';
         
-        // Инициалы для аватара
         const initials = (firstName[0] || '') + (surname[0] || '');
         document.getElementById('userAvatar').textContent = initials || 'П';
         
@@ -67,14 +74,21 @@ async function loadUserProfile(forceRefresh = false) {
         if (currentTab === 'profile') {
             const setVal = (id, val) => {
                 const el = document.getElementById(id);
-                if (el) el.value = val || '';
+                if (el) {
+                    el.value = val || '';
+                    console.log(`✅ Поле ${id} установлено в: "${val || ''}"`);
+                } else {
+                    console.warn(`⚠️ Поле ${id} не найдено`);
+                }
             };
+            
             setVal('profileFirstname', firstName);
-            setVal('profileLastname', lastname);
-            setVal('profileSurname', surname);
+            setVal('profileLastname', lastname);  // Отчество
+            setVal('profileSurname', surname);     // Фамилия
             setVal('profilePhone', phone);
             setVal('profileLocation', location);
             setVal('profileDescription', description);
+            
             console.log('✅ Форма профиля обновлена');
         }
         
@@ -224,16 +238,26 @@ async function renderContent(tabId) {
 async function renderDashboard(content, userId) {
     console.log('🏠 Загрузка главной...');
     
-    const [animals, donations] = await Promise.all([
-        API.Animal.getUserAnimals(userId).catch(err => {
-            console.error('Ошибка загрузки животных:', err);
-            return [];
-        }),
-        API.FundraiserAPI.getUserDonations(userId).catch(err => {
-            console.error('Ошибка загрузки донатов:', err);
-            return [];
-        })
-    ]);
+    let animals = [];
+let donations = [];
+
+try {
+    animals = await API.Animal.getUserAnimals(userId);
+    console.log('🐾 Загружено животных:', animals.length);
+} catch (err) {
+    console.error('❌ Ошибка загрузки животных:', err);
+}
+
+try {
+    if (API.FundraiserAPI && API.FundraiserAPI.getUserDonations) {
+        donations = await API.FundraiserAPI.getUserDonations(userId);
+        console.log('💰 Загружено донатов:', donations.length);
+    } else {
+        console.warn('⚠️ API.FundraiserAPI.getUserDonations не найден');
+    }
+} catch (err) {
+    console.error('❌ Ошибка загрузки донатов:', err);
+}
     
     const totalDonated = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
     
@@ -1085,3 +1109,26 @@ function shareAnimal(animalId) {
         alert('Ссылка скопирована!');
     }
 }
+
+// Функция для отладки — показывает все поля профиля
+window.debugProfile = async function() {
+    const credentials = API.storage.getCredentials();
+    if (!credentials) {
+        console.error('Нет credentials');
+        return;
+    }
+    
+    try {
+        const profile = await API.User.getProfile(credentials.userId);
+        console.log('=== ВСЕ ПОЛЯ ПРОФИЛЯ ===');
+        console.log(profile);
+        console.log('=== КЛЮЧИ ===');
+        console.log(Object.keys(profile));
+        console.log('=== ЗНАЧЕНИЯ ===');
+        Object.keys(profile).forEach(key => {
+            console.log(`${key}:`, profile[key]);
+        });
+    } catch (error) {
+        console.error('Ошибка:', error);
+    }
+};
