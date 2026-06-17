@@ -25,7 +25,7 @@ echo -e "\n"
 echo "=== 5.5. Регистрация тестового пользователя для загрузки ==="
 curl -sS -X POST "${BASE_URL}/api/register" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "Email=testuser@mail.com&PasswordHash=secret123&Firstname=Test&Surname=User"
+  -d "Email=testuser@mail.com&PasswordHash=secret123&Firstname=Test&Surname=User&Phone=1234567890"
 echo -e "\n"
 
 echo "=== 6. Создание нового животного с загрузкой файла ==="
@@ -72,7 +72,7 @@ echo -e "\n"
 echo "=== 12. Регистрация второго пользователя (для донатов) ==="
 curl -sS -X POST "${BASE_URL}/api/register" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "Email=donator@mail.com&PasswordHash=secret456&Firstname=Don&Surname=Ator"
+  -d "Email=donator@mail.com&PasswordHash=secret456&Firstname=Don&Surname=Ator&Phone=0987654321"
 echo -e "\n"
 
 echo "=== 13. Создание сбора средств (для животного с ID=1) ==="
@@ -107,6 +107,12 @@ echo -e "\n"
 
 echo "=== 18. Поиск по параметрам с пагинацией (Cat, limit=1) ==="
 curl -sS -X 'GET' "${BASE_URL}/api/animal?Type=Cat&limit=1" -H 'accept: application/json'
+echo -e "\n"
+
+echo "=== 18.5. Обновление профиля пользователя (testuser, ID=1) ==="
+curl -sS -X PUT "${BASE_URL}/api/user" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "Email=testuser@mail.com&PasswordHash=secret123&Firstname=TestUpdated&Surname=UserUpdated&Phone=0000000000&Description=Updated description&Location=Moscow"
 echo -e "\n"
 
 echo "=== 19. Получение профиля пользователя (testuser, ID=1) ==="

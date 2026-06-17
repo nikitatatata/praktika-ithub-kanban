@@ -21,11 +21,11 @@ print_header "2. Регистрация: Попытка дублирования
 echo "Сначала регистрируем пользователя..."
 curl -sS -X POST "${BASE_URL}/api/register" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "Email=duplicate@mail.com&PasswordHash=secret123&Firstname=Dupli&Surname=Cate" > /dev/null
+  -d "Email=duplicate@mail.com&PasswordHash=secret123&Firstname=Dupli&Surname=Cate&Phone=1234567890" > /dev/null
 echo "Ожидаем: 409 Conflict при повторной регистрации"
 curl -i -X POST "${BASE_URL}/api/register" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "Email=duplicate@mail.com&PasswordHash=secret123&Firstname=Dupli&Surname=Cate"
+  -d "Email=duplicate@mail.com&PasswordHash=secret123&Firstname=Dupli&Surname=Cate&Phone=1234567890"
 
 # --- Тесты входа ---
 

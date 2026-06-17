@@ -3,6 +3,7 @@ CREATE SCHEMA IF NOT EXISTS "public";
 CREATE TABLE IF NOT EXISTS "public"."User" (
     "id" bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     "Email" text NOT NULL UNIQUE,
+    "Phone" text NOT NULL,
     "FirstName" text NOT NULL,
     "SurName" text NOT NULL,
     "LastName" text,

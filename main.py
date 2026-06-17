@@ -44,11 +44,12 @@ def register(
     PasswordHash: str = Form(...), 
     Firstname: str = Form(...), 
     Surname: str = Form(...),
+    Phone: str = Form(...),
     Lastname: str = Form(""),
     Description: str = Form(""),
     Location: str = Form("")
 ):
-    res = add_User(Email, PasswordHash, Firstname, Surname, Lastname, Description, Location)
+    res = add_User(Email, PasswordHash, Firstname, Surname, Phone, Lastname, Description, Location)
     if not res:
         # 409 Conflict - ресурс уже существует (или другая ошибка БД)
         return Response(content="false", status_code=409, media_type="application/json")
@@ -133,6 +134,27 @@ def get_user_profile(user_id: int):
     if not user:
         return Response(status_code=404, content='{"error": "User not found"}', media_type="application/json")
     return user
+
+@app.put("/api/user")
+def update_user_profile(
+    Email: str = Form(...),
+    PasswordHash: str = Form(...),
+    Firstname: str = Form(...),
+    Surname: str = Form(...),
+    Phone: str = Form(...),
+    Lastname: str = Form(""),
+    Description: str = Form(""),
+    Location: str = Form("")
+):
+    user_id = get_User_by_auth(Email, PasswordHash)
+    if not user_id:
+        return Response(content='{"error": "Unauthorized"}', status_code=403, media_type="application/json")
+        
+    success = update_User(user_id, Firstname, Surname, Phone, Lastname, Description, Location)
+    if not success:
+        return Response(content='{"error": "Failed to update profile"}', status_code=500, media_type="application/json")
+        
+    return {"message": "Profile updated successfully"}
 
 @app.delete("/api/animal/{animal_id}")
 def delete_animal(

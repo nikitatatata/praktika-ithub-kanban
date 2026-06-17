@@ -24,7 +24,7 @@ def get_User_by_auth(Email: str, PasswordHash: str):
 
 def get_User_by_id(user_id: int):
     res = db.execute("""
-        SELECT "id", "Email", "FirstName", "SurName", "LastName", "Description", "Location"
+        SELECT "id", "Email", "Phone", "FirstName", "SurName", "LastName", "Description", "Location"
         FROM "public"."User" 
         WHERE "id" = %s
     """, (user_id,), fetch=True)
@@ -37,19 +37,37 @@ def add_User(
         PasswordHash: str, 
         Firstname: str, 
         Surname: str,
+        Phone: str,
         Lastname: str = "",
         Description: str = "",
         Location: str = ""
 ):
     res = db.execute("""
             INSERT INTO "public"."User" 
-            ("Email", "FirstName", "LastName", "Location", "PassHash", "SurName", "Description") 
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (Email, Firstname, Lastname, Location, PasswordHash, Surname, Description))    # Если execute вернул ошибку, значит регистрация не удалась
+            ("Email", "Phone", "FirstName", "LastName", "Location", "PassHash", "SurName", "Description") 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (Email, Phone, Firstname, Lastname, Location, PasswordHash, Surname, Description))    # Если execute вернул ошибку, значит регистрация не удалась
     if isinstance(res, Exception):
         return False
     return True
 
+def update_User(
+        user_id: int,
+        Firstname: str,
+        Surname: str,
+        Phone: str,
+        Lastname: str = "",
+        Description: str = "",
+        Location: str = ""
+):
+    res = db.execute("""
+        UPDATE "public"."User"
+        SET "FirstName" = %s, "SurName" = %s, "Phone" = %s, "LastName" = %s, "Description" = %s, "Location" = %s
+        WHERE "id" = %s
+    """, (Firstname, Surname, Phone, Lastname, Description, Location, user_id))
+    if isinstance(res, Exception):
+        return False
+    return True
 
 def add_Animal(
         Type: str,
