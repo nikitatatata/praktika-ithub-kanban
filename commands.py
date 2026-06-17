@@ -44,12 +44,13 @@ def add_User(
 ):
     res = db.execute("""
             INSERT INTO "public"."User" 
-            ("Email", "Phone", "FirstName", "LastName", "Location", "PassHash", "SurName", "Description") 
+            ("Email", "Phone", "FirstName", "LastName", "Location", "PassHash", "SurName", "Description")
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (Email, Phone, Firstname, Lastname, Location, PasswordHash, Surname, Description))    # Если execute вернул ошибку, значит регистрация не удалась
-    if isinstance(res, Exception):
-        return False
-    return True
+            RETURNING id
+        """, (Email, Phone, Firstname, Lastname, Location, PasswordHash, Surname, Description), fetch=True)
+    if isinstance(res, Exception) or not res:
+        return None
+    return res[0]['id']
 
 def update_User(
         user_id: int,

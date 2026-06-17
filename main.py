@@ -49,22 +49,22 @@ def register(
     Description: str = Form(""),
     Location: str = Form("")
 ):
-    res = add_User(Email, PasswordHash, Firstname, Surname, Phone, Lastname, Description, Location)
-    if not res:
+    user_id = add_User(Email, PasswordHash, Firstname, Surname, Phone, Lastname, Description, Location)
+    if not user_id:
         # 409 Conflict - ресурс уже существует (или другая ошибка БД)
         return Response(content="false", status_code=409, media_type="application/json")
-    return True
+    return user_id
 
 @app.post("/api/login")
 def login(
     Email: str = Form(...), 
     PasswordHash: str = Form(...) 
 ):
-    res = validate_User(Email, PasswordHash)
-    if not res:
+    user_id = get_User_by_auth(Email, PasswordHash)
+    if not user_id:
         # 403 Forbidden - доступ запрещен (неверные учетные данные)
         return Response(content="false", status_code=403, media_type="application/json")
-    return True
+    return user_id
 
 @app.get("/api/animal")
 def get_animal(
