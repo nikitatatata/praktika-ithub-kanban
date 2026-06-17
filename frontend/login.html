@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Лапы, крылья и хвосты</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--secondary) 0%, #14b8a6 100%);
+            padding: 2rem;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-header .logo {
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .auth-header h1 {
+            font-size: 1.75rem;
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-header p {
+            color: var(--gray-600);
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            font-size: 0.875rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .auth-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .auth-btn:hover {
+            background: var(--primary-dark);
+        }
+        
+        .auth-btn:disabled {
+            background: var(--gray-200);
+            cursor: not-allowed;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--gray-600);
+        }
+        
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <a href="index.html" class="logo">
+                    <i class="fa-solid fa-paw"></i>
+                    <span>Лапы, крылья и хвосты</span>
+                </a>
+                <h1>Вход в аккаунт</h1>
+                <p>Введите свои данные для входа</p>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" required>
+                </div>
+                
+                <button type="submit" class="auth-btn" id="submitBtn">
+                    <i class="fa-solid fa-right-to-bracket"></i> Войти
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Вход...';
+            errorMessage.classList.remove('show');
+            
+            try {
+                const success = await API.Auth.login(email, password);
+                
+                if (success) {
+                    // Получаем ID пользователя
+                    // Нужно найти способ получить userId после логина
+                    // Пока перенаправляем на dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error('Неверный email или пароль');
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
+            }
+        });
+    </script>
+</body>
+</html>

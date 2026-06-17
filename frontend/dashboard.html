@@ -8,20 +8,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="dashboard-body">
-    <!-- Мобильная шапка -->
-    <div class="mobile-header">
-        <a href="index.html" class="logo">
-            <i class="fa-solid fa-paw"></i>
-            <span>Лапы, крылья и хвосты</span>
-        </a>
-        <button class="icon-btn">
-            <i class="fa-regular fa-bell"></i>
-            <span class="badge">3</span>
-        </button>
-    </div>
-
     <div class="dashboard-container">
-        <!-- Боковое меню (для десктопа) -->
+        <!-- Боковое меню -->
         <aside class="sidebar">
             <a href="index.html" class="sidebar-header">
                 <i class="fa-solid fa-paw"></i>
@@ -66,19 +54,16 @@
             </div>
         </main>
     </div>
-
-    <!-- Нижняя навигация (для мобильных) -->
-    <nav class="bottom-nav" id="bottomNav">
-        <!-- Генерируется через JS -->
-    </nav>
+    
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
 
     <!-- Модальное окно детальной карточки животного -->
-    <div id="animalDetailModal" class="modal-overlay">
-        <div class="modal-content" id="animalDetailModalContent">
-            <!-- Контент генерируется через JS -->
-        </div>
+<div id="animalDetailModal" class="modal-overlay">
+    <div class="modal-content" id="animalDetailModalContent">
+        <!-- Контент генерируется через JS -->
     </div>
+</div>
 
-    <script src="js/dashboard.js"></script>
 </body>
 </html>
