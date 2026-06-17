@@ -3,11 +3,22 @@
 // ==================== ХЕШИРОВАНИЕ ПАРОЛЯ ====================
 
 async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    if (window.crypto && window.crypto.subtle) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    
+    console.warn('⚠️ Web Crypto API недоступен. Используйте https или localhost!');
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+        const char = password.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16).padStart(64, '0');
 }
 
 // ==================== ХРАНИЛИЩЕ ====================
@@ -51,7 +62,7 @@ async function apiRequest(endpoint, options = {}) {
         }
     };
     
-    // Не устанавливаем Content-Type для FormData
+    // Для FormData не устанавливаем Content-Type — браузер сам добавит boundary
     if (!(options.body instanceof FormData)) {
         if (!config.headers['Content-Type']) {
             config.headers['Content-Type'] = 'application/json';
@@ -60,39 +71,40 @@ async function apiRequest(endpoint, options = {}) {
     
     try {
         const response = await fetch(endpoint, config);
-        
-        // Сохраняем статус для обработки
         const status = response.status;
         
         // 204 No Content
         if (status === 204) {
-            return { success: true, data: null };
+            return { success: true, status, data: null };
         }
         
-        // Пробуем распарсить ответ
+        // Парсим ответ
         let data;
         const contentType = response.headers.get('content-type');
         
         if (contentType && contentType.includes('application/json')) {
             data = await response.json();
         } else {
-            const text = await response.text();
-            if (text === 'true') data = true;
-            else if (text === 'false') data = false;
-            else data = text;
+            const text = await response.text().catch(() => '');
+            // Пытаемся распарсить как число (ID пользователя)
+            const num = Number(text);
+            if (!isNaN(num) && text.trim() !== '') {
+                data = num;
+            } else if (text === 'true') {
+                data = true;
+            } else if (text === 'false') {
+                data = false;
+            } else {
+                data = text;
+            }
         }
         
-        // Если ответ успешный
+        // Возвращаем объект с успехом/ошибкой
         if (response.ok) {
-            return { success: true, data: data };
+            return { success: true, status, data };
         }
         
-        // Если ошибка - возвращаем объект с кодом и данными
-        return { 
-            success: false, 
-            status: status, 
-            data: data 
-        };
+        return { success: false, status, data };
         
     } catch (error) {
         console.error('API Request failed:', error);
@@ -118,22 +130,23 @@ const AuthAPI = {
             body: formData.toString()
         });
         
-        if (response.success && response.data === true) {
-            storage.setCredentials(email, passwordHash, null);
-            return { success: true };
+        // Успешный вход - бэкенд возвращает userId (число)
+        if (response.success && typeof response.data === 'number' && response.data > 0) {
+            storage.setCredentials(email, passwordHash, response.data);
+            return { success: true, userId: response.data };
         }
         
-        // Ошибка 403 - пользователь не найден или неверный пароль
+        // 403 - пользователь не найден или неверный пароль
         if (response.status === 403) {
-            return { 
-                success: false, 
-                error: 'Пользователь с таким email не найден или неверный пароль' 
+            return {
+                success: false,
+                error: 'Пользователь с таким email не найден или неверный пароль'
             };
         }
         
-        return { 
-            success: false, 
-            error: 'Ошибка входа. Попробуйте позже.' 
+        return {
+            success: false,
+            error: 'Ошибка входа. Попробуйте позже.'
         };
     },
     
@@ -159,22 +172,23 @@ const AuthAPI = {
             body: formData.toString()
         });
         
-        if (response.success && response.data === true) {
-            storage.setCredentials(userData.email, passwordHash, null);
-            return { success: true };
+        // Успешная регистрация - бэкенд возвращает userId
+        if (response.success && typeof response.data === 'number' && response.data > 0) {
+            storage.setCredentials(userData.email, passwordHash, response.data);
+            return { success: true, userId: response.data };
         }
         
-        // Ошибка 409 - пользователь уже существует
+        // 409 - пользователь уже существует
         if (response.status === 409) {
-            return { 
-                success: false, 
-                error: 'Пользователь с таким email уже существует' 
+            return {
+                success: false,
+                error: 'Пользователь с таким email уже зарегистрирован'
             };
         }
         
-        return { 
-            success: false, 
-            error: 'Ошибка регистрации. Попробуйте позже.' 
+        return {
+            success: false,
+            error: 'Ошибка регистрации. Попробуйте позже.'
         };
     },
     
@@ -196,7 +210,14 @@ const AuthAPI = {
 
 const UserAPI = {
     async getProfile(userId) {
-        return await apiRequest(`/api/user/${userId}`);
+        const response = await apiRequest(`/api/user/${userId}`);
+        if (!response.success) {
+            if (response.status === 404) {
+                throw new Error('Пользователь не найден');
+            }
+            throw new Error('Ошибка загрузки профиля');
+        }
+        return response.data;
     },
     
     async updateProfile(userData) {
@@ -214,13 +235,22 @@ const UserAPI = {
         if (userData.description) formData.append('Description', userData.description);
         if (userData.location) formData.append('Location', userData.location);
         
-        return await apiRequest('/api/user', {
+        const response = await apiRequest('/api/user', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: formData.toString()
         });
+        
+        if (!response.success) {
+            if (response.status === 403) {
+                throw new Error('Неверные данные авторизации');
+            }
+            throw new Error('Ошибка сохранения профиля');
+        }
+        
+        return response.data;
     }
 };
 
@@ -237,12 +267,16 @@ const AnimalAPI = {
             queryParams.append('Sterealized', params.sterealized);
         }
         if (params.limit) queryParams.append('limit', params.limit);
-        if (params.offset) queryParams.append('offset', params.offset);
+        if (params.offset !== undefined) queryParams.append('offset', params.offset);
         
         const queryString = queryParams.toString();
         const endpoint = queryString ? `/api/animal?${queryString}` : '/api/animal';
         
-        return await apiRequest(endpoint);
+        const response = await apiRequest(endpoint);
+        if (!response.success) return [];
+        
+        // Если ответ - массив, возвращаем его, иначе пустой массив
+        return Array.isArray(response.data) ? response.data : [];
     },
     
     async create(animalData, imageFile) {
@@ -261,14 +295,36 @@ const AnimalAPI = {
         formData.append('Email', credentials.email);
         formData.append('PasswordHash', credentials.passwordHash);
         
-        return await apiRequest('/api/animal', {
+        const response = await apiRequest('/api/animal', {
             method: 'POST',
             body: formData
         });
+        
+        if (!response.success) {
+            if (response.status === 403) {
+                throw new Error('Ошибка авторизации');
+            }
+            if (response.status === 409) {
+                throw new Error('Животное с таким именем уже существует');
+            }
+            if (response.status === 422) {
+                throw new Error('Не все обязательные поля заполнены');
+            }
+            throw new Error('Ошибка создания объявления');
+        }
+        
+        return response.data;
     },
     
     async getById(animalId) {
-        return await apiRequest(`/api/animal/${animalId}`);
+        const response = await apiRequest(`/api/animal/${animalId}`);
+        if (!response.success) {
+            if (response.status === 404) {
+                throw new Error('Животное не найдено');
+            }
+            throw new Error('Ошибка загрузки');
+        }
+        return response.data;
     },
     
     async delete(animalId) {
@@ -279,26 +335,43 @@ const AnimalAPI = {
         formData.append('Email', credentials.email);
         formData.append('PasswordHash', credentials.passwordHash);
         
-        return await apiRequest(`/api/animal/${animalId}`, {
+        const response = await apiRequest(`/api/animal/${animalId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: formData.toString()
         });
+        
+        if (!response.success) {
+            if (response.status === 403) {
+                throw new Error('Вы не являетесь владельцем этого животного');
+            }
+            if (response.status === 404) {
+                throw new Error('Животное не найдено');
+            }
+            throw new Error('Ошибка удаления');
+        }
+        
+        return true;
     },
     
     async getUserAnimals(userId, params = {}) {
+        if (!userId) return [];
+        
         const queryParams = new URLSearchParams();
         if (params.limit) queryParams.append('limit', params.limit);
-        if (params.offset) queryParams.append('offset', params.offset);
+        if (params.offset !== undefined) queryParams.append('offset', params.offset);
         
         const queryString = queryParams.toString();
-        const endpoint = queryString 
-            ? `/api/user/${userId}/animals?${queryString}` 
+        const endpoint = queryString
+            ? `/api/user/${userId}/animals?${queryString}`
             : `/api/user/${userId}/animals`;
         
-        return await apiRequest(endpoint);
+        const response = await apiRequest(endpoint);
+        if (!response.success) return [];
+        
+        return Array.isArray(response.data) ? response.data : [];
     }
 };
 
@@ -308,21 +381,29 @@ const FundraiserAPI = {
     async getAll(params = {}) {
         const queryParams = new URLSearchParams();
         if (params.limit) queryParams.append('limit', params.limit);
-        if (params.offset) queryParams.append('offset', params.offset);
+        if (params.offset !== undefined) queryParams.append('offset', params.offset);
         
         const queryString = queryParams.toString();
         const endpoint = queryString ? `/api/fundraisers?${queryString}` : '/api/fundraisers';
         
-        return await apiRequest(endpoint);
+        const response = await apiRequest(endpoint);
+        if (!response.success) return [];
+        
+        return Array.isArray(response.data) ? response.data : [];
     },
     
-    async create(fundraiserData) {
+    async create(fundraiserData, imageFile) {
         const credentials = storage.getCredentials();
         if (!credentials) throw new Error('Not authenticated');
         
         const formData = new FormData();
+        formData.append('Title', fundraiserData.title);
         formData.append('TargetAmount', fundraiserData.targetAmount);
         formData.append('Description', fundraiserData.description);
+        
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
         
         if (fundraiserData.animalId) {
             formData.append('AnimalID', fundraiserData.animalId);
@@ -331,10 +412,19 @@ const FundraiserAPI = {
         formData.append('Email', credentials.email);
         formData.append('PasswordHash', credentials.passwordHash);
         
-        return await apiRequest('/api/fundraiser', {
+        const response = await apiRequest('/api/fundraiser', {
             method: 'POST',
             body: formData
         });
+        
+        if (!response.success) {
+            if (response.status === 403) {
+                throw new Error('Ошибка авторизации');
+            }
+            throw new Error('Ошибка создания сбора');
+        }
+        
+        return response.data;
     },
     
     async donate(fundraiserId, amount) {
@@ -346,27 +436,44 @@ const FundraiserAPI = {
         formData.append('Email', credentials.email);
         formData.append('PasswordHash', credentials.passwordHash);
         
-        return await apiRequest(`/api/fundraiser/${fundraiserId}/donate`, {
+        const response = await apiRequest(`/api/fundraiser/${fundraiserId}/donate`, {
             method: 'POST',
             body: formData
         });
+        
+        if (!response.success) {
+            if (response.status === 400) {
+                throw new Error('Сбор не найден или неактивен');
+            }
+            if (response.status === 403) {
+                throw new Error('Ошибка авторизации');
+            }
+            throw new Error('Ошибка пожертвования');
+        }
+        
+        return response.data;
     },
     
     async getUserDonations(userId, params = {}) {
+        if (!userId) return [];
+        
         const queryParams = new URLSearchParams();
         if (params.limit) queryParams.append('limit', params.limit);
-        if (params.offset) queryParams.append('offset', params.offset);
+        if (params.offset !== undefined) queryParams.append('offset', params.offset);
         
         const queryString = queryParams.toString();
-        const endpoint = queryString 
-            ? `/api/user/${userId}/donations?${queryString}` 
+        const endpoint = queryString
+            ? `/api/user/${userId}/donations?${queryString}`
             : `/api/user/${userId}/donations`;
         
-        return await apiRequest(endpoint);
+        const response = await apiRequest(endpoint);
+        if (!response.success) return [];
+        
+        return Array.isArray(response.data) ? response.data : [];
     }
 };
 
-// ==================== ЭКСПОРТ В ГЛОБАЛЬНУЮ ОБЛАСТЬ ====================
+// ==================== ЭКСПОРТ ====================
 
 window.API = {
     Auth: AuthAPI,

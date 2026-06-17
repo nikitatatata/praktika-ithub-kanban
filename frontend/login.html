@@ -161,39 +161,46 @@
         </div>
     </div>
     
-        <script src="js/api.js"></script>
+    <script src="js/api.js"></script>
     <script>
-        
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const submitBtn = document.getElementById('submitBtn');
-    const errorMessage = document.getElementById('errorMessage');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Вход...';
-    errorMessage.classList.remove('show');
-    
-    try {
-        const result = await API.Auth.login(email, password);
+        e.preventDefault();
         
-        if (result.success) {
-            window.location.href = 'dashboard.html';
-        } else {
-            errorMessage.textContent = result.error;
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Вход...';
+        errorMessage.classList.remove('show');
+        
+        try {
+            const result = await API.Auth.login(email, password);
+            
+            if (result.success) {
+                // После успешного логина загружаем профиль пользователя
+                try {
+                    const profile = await API.User.getProfile(result.userId);
+                    API.storage.setUserData(profile);
+                } catch (err) {
+                    console.warn('Не удалось загрузить профиль:', err);
+                }
+                
+                window.location.href = 'dashboard.html';
+            } else {
+                errorMessage.textContent = result.error;
+                errorMessage.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
+            }
+        } catch (error) {
+            errorMessage.textContent = 'Ошибка соединения с сервером. Проверьте подключение.';
             errorMessage.classList.add('show');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
         }
-    } catch (error) {
-        errorMessage.textContent = 'Ошибка соединения с сервером';
-        errorMessage.classList.add('show');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Войти';
-    }
-});
-    </script>
+    });
+</script>
 </body>
 </html>
