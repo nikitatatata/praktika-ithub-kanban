@@ -212,7 +212,10 @@
         </div>
     </div>
     
+       <!-- ВАЖНО: api.js должен быть ПЕРВЫМ -->
     <script src="js/api.js"></script>
+    
+    <!-- Потом инлайн-скрипт с обработчиком формы -->
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();

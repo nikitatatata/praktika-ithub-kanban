@@ -1,6 +1,7 @@
 // js/api.js - Модуль для работы с API
 
-// Хеширование пароля через SHA-256
+// ==================== ХЕШИРОВАНИЕ ПАРОЛЯ ====================
+
 async function hashPassword(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -9,7 +10,8 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Хранилище
+// ==================== ХРАНИЛИЩЕ ====================
+
 const storage = {
     getCredentials() {
         const data = localStorage.getItem('userCredentials');
@@ -20,7 +22,7 @@ const storage = {
         localStorage.setItem('userCredentials', JSON.stringify({
             email,
             passwordHash,
-            userId
+            userId: userId || null
         }));
     },
     
@@ -39,7 +41,8 @@ const storage = {
     }
 };
 
-// Базовая функция запросов
+// ==================== БАЗОВЫЙ ЗАПРОС ====================
+
 async function apiRequest(endpoint, options = {}) {
     const config = {
         ...options,
@@ -48,9 +51,11 @@ async function apiRequest(endpoint, options = {}) {
         }
     };
     
-    // Не добавляем Content-Type для FormData
+    // Не устанавливаем Content-Type для FormData (браузер сам установит с boundary)
     if (!(options.body instanceof FormData)) {
-        config.headers['Content-Type'] = options.headers['Content-Type'] || 'application/json';
+        if (!config.headers['Content-Type']) {
+            config.headers['Content-Type'] = 'application/json';
+        }
     }
     
     try {
@@ -58,19 +63,28 @@ async function apiRequest(endpoint, options = {}) {
         
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`API Error: ${response.status} - ${errorText}`);
+            throw new Error(`API Error ${response.status}: ${errorText}`);
         }
         
+        // 204 No Content
         if (response.status === 204) {
             return null;
         }
         
+        // Пробуем распарсить как JSON
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             return await response.json();
         }
         
-        return await response.text();
+        // Иначе возвращаем текст
+        const text = await response.text();
+        
+        // Пробуем распарсить как boolean
+        if (text === 'true') return true;
+        if (text === 'false') return false;
+        
+        return text;
     } catch (error) {
         console.error('API Request failed:', error);
         throw error;
@@ -81,29 +95,28 @@ async function apiRequest(endpoint, options = {}) {
 
 const AuthAPI = {
     async login(email, password) {
-    const passwordHash = await hashPassword(password);
-    
-    const formData = new URLSearchParams();
-    formData.append('Email', email);
-    formData.append('PasswordHash', passwordHash);
-    
-    const response = await apiRequest('/api/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData.toString()
-    });
-    
-    if (response === true || response === 'true') {
-        // Временно используем userId = 1 (нужно добавить эндпоинт на бэкенде)
-        const userId = await getUserIdByEmail(email);
-        storage.setCredentials(email, passwordHash, userId);
-        return true;
-    }
-    
-    return false;
-},
+        const passwordHash = await hashPassword(password);
+        
+        const formData = new URLSearchParams();
+        formData.append('Email', email);
+        formData.append('PasswordHash', passwordHash);
+        
+        const response = await apiRequest('/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: formData.toString()
+        });
+        
+        if (response === true) {
+            // Временно userId = null, получим позже
+            storage.setCredentials(email, passwordHash, null);
+            return true;
+        }
+        
+        return false;
+    },
     
     async register(userData) {
         const passwordHash = await hashPassword(userData.password);
@@ -127,7 +140,7 @@ const AuthAPI = {
             body: formData.toString()
         });
         
-        if (response === true || response === 'true') {
+        if (response === true) {
             storage.setCredentials(userData.email, passwordHash, null);
             return true;
         }
@@ -323,16 +336,13 @@ const FundraiserAPI = {
     }
 };
 
-// Экспорт
+// ==================== ЭКСПОРТ В ГЛОБАЛЬНУЮ ОБЛАСТЬ ====================
+
 window.API = {
     Auth: AuthAPI,
     User: UserAPI,
     Animal: AnimalAPI,
     Fundraiser: FundraiserAPI,
-    storage,
-    hashPassword
-
-async function getUserIdByEmail(email) {
-
-    return 1;
+    storage: storage,
+    hashPassword: hashPassword
 };
