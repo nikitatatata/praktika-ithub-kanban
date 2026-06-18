@@ -479,7 +479,7 @@ async function renderMyFundraisers(content, userId) {
                                     </a>` : ''}
                                     
                                     <div style="margin-top: 1rem; padding: 0.75rem; background: #fef3c7; border-radius: 0.5rem; font-size: 0.875rem; color: #92400e;">
-                                        <i class="fa-solid fa-info-circle"></i> Это ваш сбор. Пожертвования самому себе запрещены.
+                                        <i class="fa-solid fa-info-circle"></i> Это ваш сбор. Пожертвовать самому себе нельзя.
                                     </div>
                                 </div>
                             </div>
