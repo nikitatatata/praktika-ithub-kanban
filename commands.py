@@ -89,21 +89,14 @@ def add_Animal(
 
     res = db.execute("""
         INSERT INTO "public"."Animal" 
-        ("Type", "Breed", "Name", "Description", "OrientatedAge", "Cost", "Sterealized", "ImagePath") 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ("Type", "Breed", "Name", "Description", "OrientatedAge", "Cost", "Sterealized", "ImagePath", "OwnerID") 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
-    """, (Type, Breed, Name, Description, OrientatedAge, Cost, Sterealized, ImagePath), fetch=True)
+    """, (Type, Breed, Name, Description, OrientatedAge, Cost, Sterealized, ImagePath, OwnerID), fetch=True)
     
     if isinstance(res, Exception):
         return None
 
-    if OwnerID and isinstance(res, list) and len(res) > 0:
-        animal_id = res[0]['id']
-        db.execute("""
-            INSERT INTO "public"."OwnedByUsers" ("UserID", "AnimalID")
-            VALUES (%s, %s)
-        """, (OwnerID, animal_id))
-    
     return res
 
 def get_Animals(
@@ -140,10 +133,9 @@ def get_Animals(
 
 def get_Animals_by_User(UserID: int, limit: int = 20, offset: int = 0):
     query = """
-        SELECT a.* FROM "public"."Animal" a
-        JOIN "public"."OwnedByUsers" o ON a.id = o."AnimalID"
-        WHERE o."UserID" = %s
-        ORDER BY a.id DESC
+        SELECT * FROM "public"."Animal"
+        WHERE "OwnerID" = %s
+        ORDER BY id DESC
         LIMIT %s OFFSET %s
     """
     return db.execute(query, (UserID, limit, offset), fetch=True)
@@ -163,11 +155,11 @@ def delete_Animal(animal_id: int, user_id: int):
         return 404
         
     # Проверяем, принадлежит ли оно пользователю
-    owner = db.execute('SELECT 1 FROM "public"."OwnedByUsers" WHERE "AnimalID" = %s AND "UserID" = %s', (animal_id, user_id), fetch=True)
+    owner = db.execute('SELECT 1 FROM "public"."Animal" WHERE "id" = %s AND "OwnerID" = %s', (animal_id, user_id), fetch=True)
     if isinstance(owner, Exception) or not owner:
         return 403
         
-    # Удаляем (каскадное удаление в БД само уберет связи из OwnedByUsers и Fundraisers)
+    # Удаляем (каскадное удаление в БД само уберет связи из Fundraisers)
     res = db.execute('DELETE FROM "public"."Animal" WHERE "id" = %s', (animal_id,))
     if isinstance(res, Exception):
         return 500

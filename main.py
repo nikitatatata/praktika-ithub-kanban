@@ -125,7 +125,7 @@ async def create_animal(
     image_path_for_db = f"/uploads/{image.filename}"
 
     # Добавляем запись о животном в базу данных, проверяя на дубликаты
-    result = add_Animal(Type, Breed, Name, Description, OrientatedAge, Cost, Sterealized, image_path_for_db, user_id)
+    result = add_Animal(Type, Breed, Name, Description, OrientatedAge, Cost, Sterealized, image_path_for_db, OwnerID=user_id)
     
     if not result:
         return Response(content='{"error": "Animal with this name already exists"}', status_code=409, media_type="application/json")

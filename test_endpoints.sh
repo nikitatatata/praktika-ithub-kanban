@@ -2,7 +2,7 @@
 
 BASE_URL="http://127.0.0.1:8080"
 
-echo "=== 1. Получить всех животных (без фильтров) ==="
+echo "=== 1. Получить всех животных (теперь каждый объект содержит OwnerID) ==="
 curl -sS -X 'GET' "${BASE_URL}/api/animal" -H 'accept: application/json'
 echo -e "\n"
 
@@ -28,7 +28,7 @@ curl -sS -X POST "${BASE_URL}/api/register" \
   -d "Email=testuser@mail.com&PasswordHash=secret123&Firstname=Test&Surname=User&Phone=1234567890"
 echo -e "\n"
 
-echo "=== 6. Создание нового животного с загрузкой файла ==="
+echo "=== 6. Создание нового животного (автоматически привяжется к OwnerID=1) ==="
 # Создаем временный тестовый файл, если его нет
 if [ ! -f "test_image.jpg" ]; then
     echo "Creating dummy test_image.jpg"
@@ -49,7 +49,7 @@ curl -sS -X POST "${BASE_URL}/api/animal" \
   -F "PasswordHash=secret123"
 echo -e "\n"
 
-echo "=== 7. Получить всех животных тестового пользователя (предположим ID=1) ==="
+echo "=== 7. Получить всех животных тестового пользователя (вернет созданное животное с OwnerID=1) ==="
 curl -sS -X 'GET' "${BASE_URL}/api/user/1/animals" -H 'accept: application/json'
 echo -e "\n"
 
@@ -61,7 +61,7 @@ echo "=== 9. Тестирование пагинации со смещением
 curl -sS -X 'GET' "${BASE_URL}/api/animal?limit=2&offset=2" -H 'accept: application/json'
 echo -e "\n"
 
-echo "=== 10. Получение одного животного по ID (успех) ==="
+echo "=== 10. Получение одного животного по ID (успех, в ответе будет OwnerID) ==="
 curl -sS -X 'GET' "${BASE_URL}/api/animal/1" -H 'accept: application/json'
 echo -e "\n"
 
@@ -121,7 +121,7 @@ echo "=== 19. Получение профиля пользователя (testus
 curl -sS -X 'GET' "${BASE_URL}/api/user/1" -H 'accept: application/json'
 echo -e "\n"
 
-echo "=== 20. Удаление животного владельцем (animal ID=10) ==="
+echo "=== 20. Удаление животного владельцем (animal ID=10, удалит только если OwnerID совпадает) ==="
 curl -sS -i -X 'DELETE' "${BASE_URL}/api/animal/10" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "Email=testuser@mail.com&PasswordHash=secret123"
