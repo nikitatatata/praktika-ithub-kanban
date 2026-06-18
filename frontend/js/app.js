@@ -495,6 +495,46 @@ async function loadFundraisers() {
         console.error('Ошибка загрузки сборов:', error);
         grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки сборов</p>';
     }
+
+    async function loadFundraisers() {
+    const grid = document.getElementById('fundraisersGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
+    
+    try {
+        const response = await fetch('/api/fundraisers?limit=20');
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки');
+        }
+        
+        const fundraisers = await response.json();
+        const list = Array.isArray(fundraisers) ? fundraisers : [];
+        
+        // Получаем ID текущего пользователя
+        const credentials = localStorage.getItem('userCredentials');
+        const currentUserId = credentials ? JSON.parse(credentials).userId : null;
+        
+        // Фильтруем: убираем сборы текущего пользователя
+        const othersFundraisers = currentUserId 
+            ? list.filter(f => f.CreatorUserID !== currentUserId)
+            : list;
+        
+        if (othersFundraisers.length === 0) {
+            grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет доступных сборов</p>';
+            return;
+        }
+        
+        // ... остальной код рендера ...
+        grid.innerHTML = othersFundraisers.map(f => {
+            // ... тот же код что был ...
+        }).join('');
+    } catch (error) {
+        console.error('Ошибка загрузки сборов:', error);
+        grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки сборов</p>';
+    }
+}
 }
 
 function setDonateAmountMain(fundraiserId, amount) {

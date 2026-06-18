@@ -105,9 +105,7 @@ async function loadUserProfile(forceRefresh = false) {
 const menuItems = [
     { id: 'dashboard', icon: 'fa-house', label: 'Главная' },
     { id: 'my-animals', icon: 'fa-paw', label: 'Мои животные' },
-    { id: 'applications', icon: 'fa-comments', label: 'Заявки' },
-    { id: 'favorites', icon: 'fa-heart', label: 'Избранное' },
-    { id: 'fundraisers', icon: 'fa-hand-holding-dollar', label: 'Пожертвования' },
+    { id: 'all-fundraisers', icon: 'fa-hand-holding-dollar', label: 'Все сборы' },
     { id: 'my-donations', icon: 'fa-receipt', label: 'Мои донаты' },
     { id: 'search', icon: 'fa-magnifying-glass', label: 'Поиск' },
     { id: 'profile', icon: 'fa-user', label: 'Профиль' }
@@ -216,9 +214,9 @@ async function renderContent(tabId) {
             case 'favorites':
                 renderFavorites(content);
                 break;
-            case 'fundraisers':
-                await renderFundraisers(content);
-                break;
+            case 'all-fundraisers':
+                await renderAllFundraisers(content);
+                 break;
             case 'my-donations':
                 await renderMyDonations(content, userId);
                 break;
@@ -397,14 +395,18 @@ async function renderMyAnimals(content, userId) {
 
 // ==================== ВКЛАДКА: ПОЖЕРТВОВАНИЯ ====================
 
-async function renderFundraisers(content) {
-    console.log('💰 Загрузка сборов...');
+// ==================== ВКЛАДКА: ВСЕ СБОРЫ ====================
+
+async function renderAllFundraisers(content) {
+    console.log('💰 Загрузка всех сборов...');
     
     try {
-        // Проверяем, доступен ли API
         if (!API || !API.FundraiserAPI) {
-            throw new Error('API.FundraiserAPI не доступен. Проверьте подключение api.js');
+            throw new Error('API.FundraiserAPI не доступен');
         }
+        
+        const credentials = API.storage.getCredentials();
+        const currentUserId = credentials?.userId;
         
         const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
         console.log('📦 Получено сборов:', fundraisers.length);
@@ -416,10 +418,13 @@ async function renderFundraisers(content) {
             return dateB - dateA;
         });
         
+        // Фильтруем: убираем сборы текущего пользователя
+        const othersFundraisers = fundraisers.filter(f => f.CreatorUserID !== currentUserId);
+        
         content.innerHTML = `
-            <h2 class="card-title" style="margin-bottom: 1.5rem;">Активные сборы средств</h2>
+            <h2 class="card-title" style="margin-bottom: 1.5rem;">Все активные сборы</h2>
             <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-                ${fundraisers.length > 0 ? fundraisers.map(f => {
+                ${othersFundraisers.length > 0 ? othersFundraisers.map(f => {
                     const collected = f.CollectedAmount || 0;
                     const goal = f.TargetAmount || 0;
                     const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
@@ -463,7 +468,7 @@ async function renderFundraisers(content) {
                             </div>
                         </div>
                     `;
-                }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>'}
+                }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет других сборов</p>'}
             </div>
         `;
     } catch (error) {
@@ -472,7 +477,70 @@ async function renderFundraisers(content) {
             <div class="card">
                 <h2 class="card-title" style="color: #dc2626;">Ошибка загрузки</h2>
                 <p>${error.message}</p>
-                <button class="btn btn-primary" onclick="switchTab('fundraisers')" style="margin-top: 1rem;">
+                <button class="btn btn-primary" onclick="switchTab('all-fundraisers')" style="margin-top: 1rem;">
+                    <i class="fa-solid fa-rotate-right"></i> Повторить
+                </button>
+            </div>
+        `;
+    }
+}
+
+// ==================== ВКЛАДКА: МОИ ДОНАТЫ ====================
+
+async function renderMyDonations(content, userId) {
+    console.log('🧾 Загрузка моих донатов...');
+    
+    try {
+        if (!API || !API.FundraiserAPI) {
+            throw new Error('API.FundraiserAPI не доступен');
+        }
+        
+        const donations = await API.FundraiserAPI.getUserDonations(userId);
+        console.log('📦 Получено донатов:', donations.length);
+        
+        const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
+        
+        content.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card" style="border-left-color: #f97316;">
+                    <h3>Всего пожертвовано</h3>
+                    <div class="value">${totalAmount} ₽</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #10b981;">
+                    <h3>Количество донатов</h3>
+                    <div class="value">${donations.length}</div>
+                </div>
+            </div>
+
+            <h2 class="card-title" style="margin-bottom: 1.5rem;">История моих пожертвований</h2>
+            <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                ${donations.length > 0 ? donations.map(d => `
+                    <div class="fundraiser-card">
+                        <div class="fundraiser-info">
+                            <h3 class="fundraiser-title">Сбор #${d.FundraiserID || d.id || '?'}</h3>
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary); margin: 1rem 0;">
+                                ${d.Amount} ₽
+                            </div>
+                            <div style="color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fa-regular fa-calendar"></i> 
+                                ${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                }) : 'Дата неизвестна'}
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ Ошибка загрузки донатов:', error);
+        content.innerHTML = `
+            <div class="card">
+                <h2 class="card-title" style="color: #dc2626;">Ошибка загрузки</h2>
+                <p>${error.message}</p>
+                <button class="btn btn-primary" onclick="switchTab('my-donations')" style="margin-top: 1rem;">
                     <i class="fa-solid fa-rotate-right"></i> Повторить
                 </button>
             </div>
@@ -732,6 +800,46 @@ async function makeDonation(fundraiserId) {
     } catch (error) {
         alert('Ошибка: ' + error.message);
     }
+
+    async function makeDonation(fundraiserId) {
+    if (!API.Auth.isAuthenticated()) {
+        alert('Войдите в аккаунт, чтобы сделать пожертвование');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    const amount = parseInt(input?.value);
+    
+    if (!amount || amount < 1) {
+        alert('Введите корректную сумму');
+        return;
+    }
+    
+    try {
+        // Проверяем, не пытается ли пользователь пожертвовать самому себе
+        const credentials = API.storage.getCredentials();
+        const currentUserId = credentials?.userId;
+        
+        // Получаем информацию о сборе
+        const fundraisers = await API.FundraiserAPI.getAll({ limit: 1000 });
+        const fundraiser = fundraisers.find(f => f.id === fundraiserId);
+        
+        if (fundraiser && fundraiser.CreatorUserID === currentUserId) {
+            alert('Вы не можете пожертвовать самому себе!');
+            return;
+        }
+        
+        if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) return;
+        
+        await API.FundraiserAPI.donate(fundraiserId, amount);
+        alert(`Спасибо! Вы пожертвовали ${amount} ₽`);
+        input.value = '';
+        switchTab('all-fundraisers', 'Все сборы');
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+    }
+}
 }
 
 // ==================== ПОИСК ЖИВОТНЫХ ====================
