@@ -217,7 +217,7 @@ async function openAnimalModal(animalId) {
                             </div>
                         </div>
                     </div>
-                    <button class="btn-detail-secondary" onclick='showOwnerProfile(${JSON.stringify(animal)}); closeAnimalModal();'>
+                    <button class="btn-detail-secondary" onclick='showOwnerProfile(${JSON.stringify(animal)})'; closeAnimalModal();'>
                         <i class="fa-solid fa-phone"></i> Связаться
                     </button>
                     </div>
