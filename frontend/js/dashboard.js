@@ -104,12 +104,12 @@ async function loadUserProfile(forceRefresh = false) {
 
 const menuItems = [
     { id: 'dashboard', icon: 'fa-house', label: 'Главная' },
+    { id: 'profile', icon: 'fa-user', label: 'Профиль' },
     { id: 'my-animals', icon: 'fa-paw', label: 'Мои животные' },
     { id: 'my-fundraisers', icon: 'fa-bullhorn', label: 'Мои сборы' },
-    { id: 'all-fundraisers', icon: 'fa-hand-holding-dollar', label: 'Все сборы' },
     { id: 'my-donations', icon: 'fa-receipt', label: 'Мои донаты' },
     { id: 'search', icon: 'fa-magnifying-glass', label: 'Поиск' },
-    { id: 'profile', icon: 'fa-user', label: 'Профиль' }
+    { id: 'all-fundraisers', icon: 'fa-hand-holding-dollar', label: 'Все сборы' }
 ];
 
 let currentTab = 'dashboard';
