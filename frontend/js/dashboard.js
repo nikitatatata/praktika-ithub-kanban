@@ -152,8 +152,9 @@ function renderMenu() {
         `).join('');
     }
     
+    // Мобильная навигация (показываем только основные пункты)
     if (bottomNav) {
-        const mobileMenuItems = menuItems.slice(0, 5);
+        const mobileMenuItems = menuItems.slice(0, 5); // Первые 5 пунктов
         bottomNav.innerHTML = mobileMenuItems.map((item) => `
             <a href="#" class="bottom-nav-item ${item.id === currentTab ? 'active' : ''}" 
                onclick="switchTab('${item.id}', '${item.label}'); return false;">
