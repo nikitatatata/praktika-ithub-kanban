@@ -63,7 +63,7 @@ async function loadUserProfile(forceRefresh = false) {
         });
         
         // Обновляем боковое меню
-        const shortName = `${firstName} ${surname}`.trim() || 'Пользователь';
+        const shortName = `${firstName} ${surName}`.trim() || 'Пользователь';
         document.getElementById('userName').textContent = shortName;
         document.getElementById('userRole').textContent = description || 'Пользователь';
         
