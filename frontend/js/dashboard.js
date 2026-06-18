@@ -523,7 +523,7 @@ async function renderAllFundraisers(content) {
         const currentUserId = credentials?.userId;
         
         const allFundraisers = await API.FundraiserAPI.getAll({ limit: 100, offset: 0 });
-        console.log('📦 Получено сборов:', fundraisers.length);
+        console.log('📦 Получено сборов:', allFundraisers.length);
         
         // Сортируем по дате (новые сверху)
         fundraisers.sort((a, b) => {
