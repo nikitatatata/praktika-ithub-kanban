@@ -526,14 +526,14 @@ async function renderAllFundraisers(content) {
         console.log('📦 Получено сборов:', allFundraisers.length);
         
         // Сортируем по дате (новые сверху)
-        fundraisers.sort((a, b) => {
+        allFundraisers.sort((a, b) => {
             const dateA = new Date(a.CreatedAt || 0);
             const dateB = new Date(b.CreatedAt || 0);
             return dateB - dateA;
         });
         
         // Фильтруем: убираем сборы текущего пользователя
-        const othersFundraisers = fundraisers.filter(f => f.CreatorUserID !== currentUserId);
+        const othersFundraisers = allFundraisers.filter(f => f.CreatorUserID !== currentUserId);
         
         content.innerHTML = `
             <h2 class="card-title" style="margin-bottom: 1.5rem;">Все активные сборы</h2>
