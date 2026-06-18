@@ -414,7 +414,7 @@ async function renderMyFundraisers(content, userId) {
             throw new Error('API.FundraiserAPI не доступен');
         }
         
-        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 1000 });
+        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 100, offset: 0 });
         console.log('📦 Всего сборов получено:', allFundraisers.length);
         console.log(' Первый сбор:', allFundraisers[0]);
         
@@ -522,7 +522,7 @@ async function renderAllFundraisers(content) {
         const credentials = API.storage.getCredentials();
         const currentUserId = credentials?.userId;
         
-        const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
+        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 100, offset: 0 });
         console.log('📦 Получено сборов:', fundraisers.length);
         
         // Сортируем по дате (новые сверху)

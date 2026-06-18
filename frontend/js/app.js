@@ -499,7 +499,7 @@ async function loadFundraisers() {
     grid.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
     
     try {
-        const response = await fetch('/api/fundraisers?limit=20');
+        const response = await fetch('/api/fundraisers?limit=20&offset=0');
         
         if (!response.ok) {
             throw new Error('Ошибка загрузки');

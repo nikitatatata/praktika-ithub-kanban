@@ -380,11 +380,11 @@ const AnimalAPI = {
 const FundraiserAPI = {
     async getAll(params = {}) {
         const queryParams = new URLSearchParams();
-        if (params.limit) queryParams.append('limit', params.limit);
-        if (params.offset !== undefined) queryParams.append('offset', params.offset);
+        // Бэкенд требует эти параметры всегда
+        queryParams.append('limit', params.limit || 20);
+        queryParams.append('offset', params.offset !== undefined ? params.offset : 0);
         
-        const queryString = queryParams.toString();
-        const endpoint = queryString ? `/api/fundraisers?${queryString}` : '/api/fundraisers';
+        const endpoint = `/api/fundraisers?${queryParams.toString()}`;
         
         const response = await apiRequest(endpoint);
         if (!response.success) return [];
