@@ -427,3 +427,128 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNavAuth();
     loadAnimals();
 });
+
+// Загрузка активных сборов
+async function loadFundraisers() {
+    const grid = document.getElementById('fundraisersGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = '<p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>';
+    
+    try {
+        const response = await fetch('/api/fundraisers?limit=20');
+        
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки');
+        }
+        
+        const fundraisers = await response.json();
+        const list = Array.isArray(fundraisers) ? fundraisers : [];
+        
+        if (list.length === 0) {
+            grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>';
+            return;
+        }
+        
+        grid.innerHTML = list.map(f => {
+            const collected = f.CollectedAmount || 0;
+            const goal = f.TargetAmount || 0;
+            const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
+            
+            return `
+                <div class="fundraiser-card">
+                    <img src="${f.ImagePath || 'https://via.placeholder.com/500x300?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image">
+                    <div class="fundraiser-info">
+                        <h3 class="fundraiser-title">${f.Title}</h3>
+                        <p class="fundraiser-desc">${f.Description}</p>
+                        
+                        <div class="fundraiser-progress">
+                            <div class="fundraiser-meta">
+                                <span style="font-weight: 600; color: var(--secondary);">${collected} ₽</span>
+                                <span style="color: var(--gray-600);">из ${goal} ₽</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${percent}%;"></div>
+                            </div>
+                            <div style="text-align: right; font-size: 0.875rem; font-weight: 600; color: var(--secondary);">
+                                ${percent}% собрано
+                            </div>
+                        </div>
+                        
+                        <div class="donate-input-group">
+                            <input type="number" id="donateAmount_${f.id}" placeholder="Сумма в ₽" min="1">
+                            <button class="btn btn-primary" onclick="makeDonationFromMain(${f.id})">
+                                <i class="fa-solid fa-heart"></i> Помочь
+                            </button>
+                        </div>
+                        <div class="quick-amounts">
+                            <button class="quick-amount-btn" onclick="setDonateAmountMain(${f.id}, 100)">100 ₽</button>
+                            <button class="quick-amount-btn" onclick="setDonateAmountMain(${f.id}, 300)">300 ₽</button>
+                            <button class="quick-amount-btn" onclick="setDonateAmountMain(${f.id}, 500)">500 ₽</button>
+                            <button class="quick-amount-btn" onclick="setDonateAmountMain(${f.id}, 1000)">1000 ₽</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Ошибка загрузки сборов:', error);
+        grid.innerHTML = '<p style="text-align: center; padding: 2rem; color: #dc2626;">Ошибка загрузки сборов</p>';
+    }
+}
+
+function setDonateAmountMain(fundraiserId, amount) {
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    if (input) input.value = amount;
+}
+
+async function makeDonationFromMain(fundraiserId) {
+    const credentials = localStorage.getItem('userCredentials');
+    if (!credentials) {
+        if (confirm('Чтобы сделать пожертвование, нужно войти в аккаунт. Перейти на страницу входа?')) {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+    
+    const input = document.getElementById(`donateAmount_${fundraiserId}`);
+    const amount = parseInt(input?.value);
+    
+    if (!amount || amount < 1) {
+        alert('Введите корректную сумму');
+        return;
+    }
+    
+    if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) return;
+    
+    try {
+        const user = JSON.parse(credentials);
+        const formData = new FormData();
+        formData.append('Amount', amount);
+        formData.append('Email', user.email);
+        formData.append('PasswordHash', user.passwordHash);
+        
+        const response = await fetch(`/api/fundraiser/${fundraiserId}/donate`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error('Ошибка пожертвования');
+        }
+        
+        alert(`Спасибо! Вы пожертвовали ${amount} ₽`);
+        input.value = '';
+        loadFundraisers(); // Обновляем список
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
+    }
+}
+
+// Загружаем сборы при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 Главная страница загружена');
+    updateNavAuth();
+    loadAnimals();
+    loadFundraisers(); // ← Добавили загрузку сборов
+});

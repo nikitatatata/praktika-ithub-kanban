@@ -394,33 +394,6 @@ async function renderMyAnimals(content, userId) {
     `;
 }
 
-// ==================== ВКЛАДКА: ЗАЯВКИ ====================
-
-function renderApplications(content) {
-    content.innerHTML = `
-        <div class="card">
-            <h2 class="card-title">Заявки на моих животных</h2>
-            <p style="text-align: center; padding: 2rem; color: var(--gray-600);">
-                <i class="fa-solid fa-comments" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
-                Раздел заявок находится в разработке
-            </p>
-        </div>
-    `;
-}
-
-// ==================== ВКЛАДКА: ИЗБРАННОЕ ====================
-
-function renderFavorites(content) {
-    content.innerHTML = `
-        <h2 class="card-title" style="margin-bottom: 1.5rem;">Избранные животные</h2>
-        <div class="card">
-            <p style="text-align: center; padding: 2rem; color: var(--gray-600);">
-                <i class="fa-regular fa-heart" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
-                У вас пока нет избранных животных
-            </p>
-        </div>
-    `;
-}
 
 // ==================== ВКЛАДКА: ПОЖЕРТВОВАНИЯ ====================
 

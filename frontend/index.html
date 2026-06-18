@@ -17,12 +17,13 @@
             <span>Лапы, крылья и хвосты</span>
         </a>
         
-        <div class="nav-links">
-            <a href="#home" class="active">Главная</a>
-            <a href="#animals">Животные</a>
-            <a href="#how-it-works">Как это работает</a>
-            <a href="#about">О нас</a>
-        </div>
+    <div class="nav-links">
+         <a href="#home" class="active">Главная</a>
+         <a href="#animals">Животные</a>
+         <a href="#fundraisers">Сборы</a>
+         <a href="#how-it-works">Как это работает</a>
+         <a href="#about">О нас</a>
+    </div>
         
         <div class="nav-actions" id="navActions">
             <!-- Заполняется через JS в зависимости от авторизации -->
@@ -162,6 +163,16 @@
         </div>
     </section>
 
+    <!-- Секция активных сборов -->
+<section class="fundraisers-section" id="fundraisers">
+    <div class="container">
+        <h2 class="section-title">Активные сборы средств</h2>
+        <div id="fundraisersGrid" class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+            <p style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка...</p>
+        </div>
+    </div>
+</section>
+
     <!-- Каталог животных -->
     <section class="animals-section" id="animals">
         <div class="container">
@@ -172,33 +183,25 @@
         </div>
     </section>
 
-    <!-- Футер -->
-    <footer class="footer" id="about">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <h3>Лапы, крылья и хвосты</h3>
-                    <p>Платформа для тех, кто любит животных. Помогаем найти дом, поддержку и заботу каждому питомцу.</p>
-                </div>
-                <div class="footer-col">
-                    <h3>Контакты</h3>
-                    <p><i class="fa-solid fa-envelope"></i> help@paws-wings-tails.ru</p>
-                    <p><i class="fa-solid fa-phone"></i> +7 (999) 123-45-67</p>
-                </div>
-                <div class="footer-col">
-                    <h3>Мы в соцсетях</h3>
-                    <div class="social-links">
-                        <a href="#"><i class="fa-brands fa-telegram"></i></a>
-                        <a href="#"><i class="fa-brands fa-vk"></i></a>
-                        <a href="#"><i class="fa-brands fa-youtube"></i></a>
-                    </div>
-                </div>
+    
+<footer class="simple-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h3>Лапы, крылья и хвосты</h3>
+                <p>Платформа для тех, кто любит животных. Помогаем найти дом, поддержку и заботу каждому питомцу.</p>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Лапы, крылья и хвосты. Все права защищены.</p>
+            <div class="footer-col">
+                <h3>Контакты</h3>
+                <p><i class="fa-solid fa-envelope"></i> help@paws-wings-tails.ru</p>
+                <p><i class="fa-solid fa-phone"></i> +7 (999) 123-45-67</p>
             </div>
         </div>
-    </footer>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Лапы, крылья и хвосты. Все права защищены.</p>
+        </div>
+    </div>
+</footer>
 
     
     
