@@ -407,7 +407,7 @@ async function renderMyAnimals(content, userId) {
 // ==================== ВКЛАДКА: МОИ СБОРЫ ====================
 
 async function renderMyFundraisers(content, userId) {
-    console.log('📢 Загрузка моих сборов...');
+    console.log('📢 Загрузка моих сборов... userId:', userId);
     
     try {
         if (!API || !API.FundraiserAPI) {
@@ -415,9 +415,22 @@ async function renderMyFundraisers(content, userId) {
         }
         
         const allFundraisers = await API.FundraiserAPI.getAll({ limit: 1000 });
+        console.log('📦 Всего сборов получено:', allFundraisers.length);
+        console.log(' Первый сбор:', allFundraisers[0]);
         
-        // Фильтруем только мои сборы
-        const myFundraisers = allFundraisers.filter(f => f.CreatorUserID === userId);
+        // Проверяем какие поля есть у сборов
+        if (allFundraisers.length > 0) {
+            console.log('🔑 Ключи первого сбора:', Object.keys(allFundraisers[0]));
+        }
+        
+        // Пробуем разные варианты поля владельца
+        const myFundraisers = allFundraisers.filter(f => {
+            const creatorId = f.CreatorUserID || f.creatorUserID || f.UserId || f.userID || f.OwnerID;
+            console.log(`Сбор #${f.id}: CreatorUserID=${f.CreatorUserID}, UserId=${f.UserId}, OwnerID=${f.OwnerID}`);
+            return creatorId === userId;
+        });
+        
+        console.log('✅ Моих сборов найдено:', myFundraisers.length);
         
         // Сортируем по дате (новые сверху)
         myFundraisers.sort((a, b) => {
