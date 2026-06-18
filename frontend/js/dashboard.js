@@ -47,8 +47,8 @@ async function loadUserProfile(forceRefresh = false) {
         
         // Получаем все возможные варианты написания полей
         const firstName = profile.FirstName || profile.firstname || profile.firstName || '';
-        const surname = profile.Surname || profile.surname || profile.surName || '';
-        const lastname = profile.Lastname || profile.lastname || profile.lastName || '';
+        const surname = profile.Surname || profile.surname || profile.lastName || '';
+        const lastname = profile.Lastname || profile.lastname || profile.middleName || '';
         const phone = profile.Phone || profile.phone || '';
         const location = profile.Location || profile.location || '';
         const description = profile.Description || profile.description || '';
@@ -63,7 +63,7 @@ async function loadUserProfile(forceRefresh = false) {
         });
         
         // Обновляем боковое меню
-        const shortName = `${firstName} ${surName}`.trim() || 'Пользователь';
+        const shortName = `${firstName} ${surname}`.trim() || 'Пользователь';
         document.getElementById('userName').textContent = shortName;
         document.getElementById('userRole').textContent = description || 'Пользователь';
         
@@ -1574,3 +1574,4 @@ function closeOwnerProfileModal() {
         document.body.style.overflow = '';
     }
 }
+
