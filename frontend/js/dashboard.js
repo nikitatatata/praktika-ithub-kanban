@@ -927,7 +927,7 @@ async function makeDonation(fundraiserId) {
         const credentials = API.storage.getCredentials();
         const currentUserId = credentials?.userId;
         
-        // Проверяем, не пытается ли пользователь пожертвовать самому себе
+        // Проверяем владельца
         const allFundraisers = await API.FundraiserAPI.getAll({ limit: 100, offset: 0 });
         const fundraiser = allFundraisers.find(f => f.id === fundraiserId);
         
@@ -938,16 +938,17 @@ async function makeDonation(fundraiserId) {
         
         if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) return;
         
+        // Делаем донат
         await API.FundraiserAPI.donate(fundraiserId, amount);
         
-        // Ждём немного чтобы бэкенд обновил данные
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Ждём немного чтобы бэкенд обработал
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         alert(`✅ Спасибо! Вы пожертвовали ${amount} ₽`);
-        input.value = '';
         
-        // Перезагружаем текущую вкладку
-        switchTab(currentTab, document.getElementById('pageTitle').textContent);
+        // Полностью перезагружаем вкладку с сервера
+        const currentTitle = document.getElementById('pageTitle').textContent;
+        await renderContent(currentTab);
         
     } catch (error) {
         console.error('Ошибка пожертвования:', error);
