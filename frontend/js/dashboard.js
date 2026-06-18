@@ -927,22 +927,30 @@ async function makeDonation(fundraiserId) {
         const credentials = API.storage.getCredentials();
         const currentUserId = credentials?.userId;
         
-        // Получаем все сборы и проверяем владельца
-        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 1000 });
+        // Проверяем, не пытается ли пользователь пожертвовать самому себе
+        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 100, offset: 0 });
         const fundraiser = allFundraisers.find(f => f.id === fundraiserId);
         
         if (fundraiser && fundraiser.CreatorUserID === currentUserId) {
-            alert(' Вы не можете пожертвовать самому себе!');
+            alert('❌ Вы не можете пожертвовать самому себе!');
             return;
         }
         
         if (!confirm(`Вы хотите пожертвовать ${amount} ₽?`)) return;
         
         await API.FundraiserAPI.donate(fundraiserId, amount);
-        alert(`Спасибо! Вы пожертвовали ${amount} ₽`);
+        
+        // Ждём немного чтобы бэкенд обновил данные
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        alert(`✅ Спасибо! Вы пожертвовали ${amount} ₽`);
         input.value = '';
-        switchTab('all-fundraisers', 'Все сборы');
+        
+        // Перезагружаем текущую вкладку
+        switchTab(currentTab, document.getElementById('pageTitle').textContent);
+        
     } catch (error) {
+        console.error('Ошибка пожертвования:', error);
         alert('Ошибка: ' + error.message);
     }
 }
