@@ -746,17 +746,24 @@ async function renderMyDonations(content, userId) {
 // ==================== ВКЛАДКА: ПОИСК ====================
 
 async function renderSearch(content) {
-    console.log(' Загрузка поиска...');
+    console.log('🔍 Загрузка поиска...');
     
     try {
-        const response = await fetch('/api/animal?limit=20');
+        const response = await fetch('/api/animal?limit=20&offset=0');
         
         if (!response.ok) {
             throw new Error('Ошибка загрузки');
         }
         
-        const animals = await response.json();
-        const animalsList = Array.isArray(animals) ? animals : [];
+        let animals = await response.json();
+        animals = Array.isArray(animals) ? animals : [];
+        
+        // Убираем дубликаты по id
+        const uniqueAnimals = animals.filter((animal, index, self) => 
+            index === self.findIndex(a => a.id === animal.id)
+        );
+        
+        console.log(' Загружено животных:', uniqueAnimals.length);
         
         content.innerHTML = `
             <div class="card">
@@ -776,27 +783,24 @@ async function renderSearch(content) {
                     </button>
                 </div>
 
-                <div id="searchResults" class="animals-grid">
-                    ${animalsList.length > 0 ? animalsList.map(animal => `
-                        <div class="animal-card">
-                            <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image">
-                            <div class="animal-info">
-                                <div class="animal-header">
-                                    <h3 class="animal-name">${animal.Name}</h3>
-                                    <span class="animal-badge">${animal.Type}</span>
+                <div id="searchResults" class="animals-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    ${uniqueAnimals.length > 0 ? uniqueAnimals.map(animal => `
+                        <div class="animal-card" style="background: white; border-radius: 1rem; overflow: hidden; box-shadow: var(--shadow);">
+                            <img src="${animal.ImagePath || 'https://via.placeholder.com/500x500?text=Нет+фото'}" alt="${animal.Name}" class="animal-image" style="width: 100%; height: 220px; object-fit: cover;">
+                            <div class="animal-info" style="padding: 1rem;">
+                                <div class="animal-header" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                    <h3 class="animal-name" style="font-size: 1.25rem; font-weight: bold; margin: 0;">${animal.Name}</h3>
+                                    <span class="animal-badge" style="background: var(--secondary); color: white; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.875rem; font-weight: 600;">${animal.Type}</span>
                                 </div>
-                                <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
-                                <p class="animal-desc">${animal.Description}</p>
-                                <div class="animal-actions">
-                                    <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
+                                <p class="animal-meta" style="color: var(--gray-600); margin-bottom: 0.5rem; font-size: 0.9rem;">${animal.Breed}, ${animal.OrientatedAge} лет</p>
+                                <p class="animal-desc" style="color: var(--gray-600); margin-bottom: 1rem; line-height: 1.5; font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${animal.Description}</p>
+                                <div class="animal-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                    <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})" style="background: var(--secondary); color: white; padding: 0.625rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.9rem;">
                                         <i class="fa-solid fa-circle-info"></i> Подробнее
                                     </button>
-                                    <button class="btn-donate" onclick='showOwnerProfile(${JSON.stringify(animal)})'>
+                                    <button class="btn-donate" onclick='showOwnerProfile(${JSON.stringify(animal)})' style="background: var(--gray-100); color: var(--gray-600); padding: 0.625rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.9rem;">
                                         <i class="fa-solid fa-phone"></i> Связаться
                                     </button>
-                                </div>
-                                </div>
-                                </div>
                                 </div>
                             </div>
                         </div>
