@@ -111,12 +111,14 @@ function renderAnimals(animals) {
                     ${priceHtml}
                     <p class="animal-desc">${animal.Description}</p>
                     <div class="animal-actions">
+                        <div class="animal-actions">
                         <button class="btn-adopt" onclick="openAnimalModal(${animal.id})">
                             <i class="fa-solid fa-circle-info"></i> Подробнее
                         </button>
-                        <button class="btn-donate" onclick="event.stopPropagation(); toggleFavoriteBtn(this, ${animal.id})">
-                            <i class="fa-regular fa-heart"></i>
+                        <button class="btn-donate" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}')">
+                            <i class="fa-solid fa-phone"></i> Связаться
                         </button>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -215,18 +217,8 @@ async function openAnimalModal(animalId) {
                         </div>
                     </div>
 
-                    <div class="animal-detail-actions">
-                        <button class="btn-detail-primary" onclick="handleAdoptRequest('${animal.Name}')">
-                            <i class="fa-solid fa-hand-holding-heart"></i> Забрать
-                        </button>
-                        <button class="btn-detail-secondary" onclick="handleContact('${animal.Name}')">
-                            <i class="fa-solid fa-phone"></i> Связаться
-                        </button>
-                        <button class="btn-detail-icon" onclick="toggleFavorite(this)">
-                            <i class="fa-regular fa-heart"></i>
-                        </button>
-                        <button class="btn-detail-icon" onclick="shareAnimal(${animal.id})">
-                            <i class="fa-solid fa-share-nodes"></i>
+                        <button class="btn-detail-secondary" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}'); closeAnimalModal();">
+                             <i class="fa-solid fa-user"></i> Профиль владельца
                         </button>
                     </div>
                 </div>
@@ -267,7 +259,11 @@ function handleContact(animalName) {
         }
         return;
     }
-    alert(`Открываем чат с владельцем "${animalName}"`);
+    
+    // Здесь нужно получить ID владельца из текущей модалки
+    // Это сложнее, нужно передать ID в handleContact
+    alert(`Открываем профиль владельца "${animalName}"`);
+    // В идеале здесь должен быть вызов openOwnerProfile(ownerId, animalName)
 }
 
 function toggleFavorite(btn) {

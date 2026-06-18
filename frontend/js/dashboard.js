@@ -379,12 +379,14 @@ async function renderMyAnimals(content, userId) {
                                     <td>${animal.OrientatedAge} лет</td>
                                     <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
                                     <td>
-                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.25rem;" onclick="openAnimalDetailModal(${animal.id})">
-                                            <i class="fa-solid fa-eye"></i>
+                                        <div class="animal-actions">
+                                        <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
+                                            <i class="fa-solid fa-circle-info"></i> Подробнее
                                         </button>
-                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteAnimal(${animal.id})">
-                                            <i class="fa-solid fa-trash"></i>
+                                        <button class="btn-donate" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}')">
+                                            <i class="fa-solid fa-user"></i> Профиль
                                         </button>
+                                    </div>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -769,12 +771,14 @@ async function renderSearch(content) {
                                 <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
                                 <p class="animal-desc">${animal.Description}</p>
                                 <div class="animal-actions">
+                                    <div class="animal-actions">
                                     <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
                                         <i class="fa-solid fa-circle-info"></i> Подробнее
                                     </button>
-                                    <button class="btn-donate" onclick="toggleFavoriteBtn(this, ${animal.id})">
-                                        <i class="fa-regular fa-heart"></i>
+                                    <button class="btn-donate" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}')">
+                                        <i class="fa-solid fa-user"></i> Профиль
                                     </button>
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -1269,18 +1273,9 @@ async function openAnimalDetailModal(animalId) {
                     </div>
 
                     <div class="animal-detail-actions">
-                        <button class="btn-detail-primary" onclick="handleAdoptRequest('${animal.Name}')">
-                            <i class="fa-solid fa-hand-holding-heart"></i> Забрать
-                        </button>
-                        <button class="btn-detail-secondary" onclick="handleContact('${animal.Name}')">
-                            <i class="fa-solid fa-phone"></i> Связаться
-                        </button>
-                        <button class="btn-detail-icon" onclick="toggleDetailFavorite(this)">
-                            <i class="fa-regular fa-heart"></i>
-                        </button>
-                        <button class="btn-detail-icon" onclick="shareAnimal(${animal.id})">
-                            <i class="fa-solid fa-share-nodes"></i>
-                        </button>
+                    <button class="btn-detail-secondary" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}'); closeAnimalDetailModal();">
+                        <i class="fa-solid fa-user"></i> Профиль владельца
+                    </button>
                     </div>
                 </div>
             </div>
@@ -1362,3 +1357,146 @@ window.debugProfile = async function() {
         console.error('Ошибка:', error);
     }
 };
+
+// ==================== ПРОСМОТР ПРОФИЛЯ ВЛАДЕЛЬЦА ====================
+
+async function openOwnerProfile(userId, animalName = '') {
+    if (!userId) {
+        alert('Информация о владельце недоступна');
+        return;
+    }
+    
+    try {
+        // Загружаем данные профиля
+        const profile = await API.User.getProfile(userId);
+        
+        // Загружаем животных пользователя
+        const animals = await API.Animal.getUserAnimals(userId);
+        
+        // Загружаем сборы пользователя
+        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 1000 });
+        const userFundraisers = allFundraisers.filter(f => f.CreatorUserID === userId);
+        
+        // Показываем модальное окно или переключаем на вкладку
+        showOwnerProfileModal(profile, animals, userFundraisers, animalName);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки профиля:', error);
+        alert('Не удалось загрузить профиль пользователя');
+    }
+}
+
+function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {
+    const firstName = profile.FirstName || profile.firstname || '';
+    const surname = profile.Surname || profile.surname || '';
+    const lastname = profile.Lastname || profile.lastname || '';
+    const phone = profile.Phone || profile.phone || '';
+    const location = profile.Location || profile.location || '';
+    const description = profile.Description || profile.description || '';
+    const email = profile.Email || profile.email || '';
+    
+    const fullName = `${firstName} ${lastname} ${surname}`.trim();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'ownerProfileModal';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="closeOwnerProfileModal()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div style="padding: 2rem;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 2.5rem; font-weight: bold;">
+                        ${firstName[0] || 'П'}${surname[0] || ''}
+                    </div>
+                    <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">${fullName}</h2>
+                    ${location ? `<p style="color: var(--gray-600);"><i class="fa-solid fa-location-dot"></i> ${location}</p>` : ''}
+                </div>
+                
+                ${animalName ? `<div style="background: #fef3c7; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; color: #92400e;">
+                    <i class="fa-solid fa-info-circle"></i> Вы просматриваете профиль владельца животного "<strong>${animalName}</strong>"
+                </div>` : ''}
+                
+                <div style="background: var(--gray-50); padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--gray-800);"><i class="fa-solid fa-address-card"></i> Контактная информация</h3>
+                    ${phone ? `<p style="margin-bottom: 0.5rem;"><i class="fa-solid fa-phone" style="color: var(--primary); margin-right: 0.5rem;"></i> ${phone}</p>` : ''}
+                    ${email ? `<p style="margin-bottom: 0.5rem;"><i class="fa-solid fa-envelope" style="color: var(--primary); margin-right: 0.5rem;"></i> ${email}</p>` : ''}
+                    ${description ? `<p style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--gray-200); color: var(--gray-600);">${description}</p>` : ''}
+                </div>
+                
+                ${animals.length > 0 ? `
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin-bottom: 1rem; color: var(--gray-800);"><i class="fa-solid fa-paw"></i> Животные пользователя (${animals.length})</h3>
+                        <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+                            ${animals.map(animal => `
+                                <div class="animal-card">
+                                    <img src="${animal.ImagePath || 'https://via.placeholder.com/300x200?text=Нет+фото'}" alt="${animal.Name}" class="animal-image" style="height: 180px;">
+                                    <div class="animal-info" style="padding: 1rem;">
+                                        <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">${animal.Name}</h4>
+                                        <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.5rem;">${animal.Type}, ${animal.Breed}</p>
+                                        <p style="color: var(--gray-600); font-size: 0.875rem;">${animal.OrientatedAge} лет</p>
+                                        <p style="margin-top: 0.5rem; font-weight: 600; color: ${animal.Cost > 0 ? 'var(--primary)' : 'var(--secondary)'};">
+                                            ${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Отдам даром'}
+                                        </p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${fundraisers.length > 0 ? `
+                    <div>
+                        <h3 style="margin-bottom: 1rem; color: var(--gray-800);"><i class="fa-solid fa-hand-holding-dollar"></i> Сбор средств (${fundraisers.length})</h3>
+                        <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                            ${fundraisers.map(f => {
+                                const collected = f.CollectedAmount || 0;
+                                const goal = f.TargetAmount || 0;
+                                const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
+                                
+                                return `
+                                    <div class="fundraiser-card">
+                                        <img src="${f.ImagePath || 'https://via.placeholder.com/300x200?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image" style="height: 150px;">
+                                        <div class="fundraiser-info" style="padding: 1rem;">
+                                            <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">${f.Title}</h4>
+                                            <p style="color: var(--gray-600); font-size: 0.875rem; margin-bottom: 0.75rem;">${f.Description}</p>
+                                            <div class="progress-bar" style="margin-bottom: 0.5rem;">
+                                                <div class="progress-fill" style="width: ${percent}%;"></div>
+                                            </div>
+                                            <p style="font-size: 0.875rem; color: var(--secondary); font-weight: 600;">
+                                                ${collected} ₽ из ${goal} ₽ (${percent}%)
+                                            </p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${animals.length === 0 && fundraisers.length === 0 ? `
+                    <p style="text-align: center; color: var(--gray-600); padding: 2rem;">
+                        У пользователя пока нет объявлений и сборов
+                    </p>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeOwnerProfileModal();
+    });
+}
+
+function closeOwnerProfileModal() {
+    const modal = document.getElementById('ownerProfileModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
+}
