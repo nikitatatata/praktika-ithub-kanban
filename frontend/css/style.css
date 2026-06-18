@@ -2568,3 +2568,49 @@ body {
         min-height: 200px;
     }
 }
+
+/* Исправление огромных карточек в dashboard */
+.content .animal-card {
+    max-width: 100%;
+}
+
+.content .animal-image {
+    width: 100%;
+    height: 220px; /* Фиксированная высота */
+    object-fit: cover; /* Обрезает изображение, не растягивая */
+    display: block;
+}
+
+.content .animal-info {
+    padding: 1rem;
+}
+
+.content .animal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.content .btn-adopt,
+.content .btn-donate {
+    padding: 0.625rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.content .btn-adopt {
+    background: var(--secondary);
+    color: white;
+}
+
+.content .btn-donate {
+    background: var(--gray-100);
+    color: var(--gray-600);
+}
