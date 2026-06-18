@@ -816,8 +816,8 @@ function renderProfile(content) {
     const profile = API.storage.getUserData() || {};
     
     const firstName = getField(profile, 'FirstName', 'firstname');
-    const surname = getField(profile, 'Surname', 'surname');
-    const lastname = getField(profile, 'Lastname', 'lastname');
+    const surname = getField(profile, 'SurName', 'surname');
+    const lastname = getField(profile, 'LastName', 'lastname');
     const phone = getField(profile, 'Phone', 'phone');
     const location = getField(profile, 'Location', 'location');
     const description = getField(profile, 'Description', 'description');
