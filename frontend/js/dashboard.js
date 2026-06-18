@@ -380,12 +380,14 @@ async function renderMyAnimals(content, userId) {
                                     <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
                                     <td>
                                         <div class="animal-actions">
+                                        <div class="animal-actions">
                                         <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
                                             <i class="fa-solid fa-circle-info"></i> Подробнее
                                         </button>
-                                        <button class="btn-donate" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}')">
-                                            <i class="fa-solid fa-user"></i> Профиль
+                                        <button class="btn-donate" onclick='showOwnerPhone(${JSON.stringify(animal)})'>
+                                            <i class="fa-solid fa-phone"></i> Связаться
                                         </button>
+                                    </div>
                                     </div>
                                     </td>
                                 </tr>
@@ -772,12 +774,14 @@ async function renderSearch(content) {
                                 <p class="animal-desc">${animal.Description}</p>
                                 <div class="animal-actions">
                                     <div class="animal-actions">
+                                    <div class="animal-actions">
                                     <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
                                         <i class="fa-solid fa-circle-info"></i> Подробнее
                                     </button>
-                                    <button class="btn-donate" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}')">
-                                        <i class="fa-solid fa-user"></i> Профиль
+                                    <button class="btn-donate" onclick='showOwnerPhone(${JSON.stringify(animal)})'>
+                                        <i class="fa-solid fa-phone"></i> Связаться
                                     </button>
+                                </div>
                                 </div>
                                 </div>
                             </div>
@@ -1273,8 +1277,8 @@ async function openAnimalDetailModal(animalId) {
                     </div>
 
                     <div class="animal-detail-actions">
-                    <button class="btn-detail-secondary" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}'); closeAnimalDetailModal();">
-                        <i class="fa-solid fa-user"></i> Профиль владельца
+                    <button class="btn-detail-secondary" onclick='showOwnerPhone(${JSON.stringify(animal)}); closeAnimalModal();'>
+                        <i class="fa-solid fa-phone"></i> Связаться
                     </button>
                     </div>
                 </div>
@@ -1360,30 +1364,14 @@ window.debugProfile = async function() {
 
 // ==================== ПРОСМОТР ПРОФИЛЯ ВЛАДЕЛЬЦА ====================
 
-async function openOwnerProfile(userId, animalName = '') {
-    if (!userId) {
-        alert('Информация о владельце недоступна');
-        return;
-    }
+// Показ телефона владельца
+function showOwnerPhone(animal) {
+    const phone = animal.OwnerPhone || animal.Phone || 'Недоступен';
+    const ownerName = animal.OwnerName || animal.OwnerFirstName 
+        ? `${animal.OwnerFirstName || ''} ${animal.OwnerSurname || ''}`.trim() 
+        : 'Владелец';
     
-    try {
-        // Загружаем данные профиля
-        const profile = await API.User.getProfile(userId);
-        
-        // Загружаем животных пользователя
-        const animals = await API.Animal.getUserAnimals(userId);
-        
-        // Загружаем сборы пользователя
-        const allFundraisers = await API.FundraiserAPI.getAll({ limit: 1000 });
-        const userFundraisers = allFundraisers.filter(f => f.CreatorUserID === userId);
-        
-        // Показываем модальное окно или переключаем на вкладку
-        showOwnerProfileModal(profile, animals, userFundraisers, animalName);
-        
-    } catch (error) {
-        console.error('Ошибка загрузки профиля:', error);
-        alert('Не удалось загрузить профиль пользователя');
-    }
+    alert(`📞 Контактная информация:\n\n${ownerName}\nТелефон: ${phone}`);
 }
 
 function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {

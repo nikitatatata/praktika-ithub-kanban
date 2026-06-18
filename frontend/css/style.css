@@ -330,13 +330,13 @@ body {
     gap: 2rem;
 }
 
+/* Компактные карточки животных */
 .animal-card {
     background: white;
     border-radius: 1rem;
     overflow: hidden;
     box-shadow: var(--shadow);
     transition: transform 0.3s, box-shadow 0.3s;
-    cursor: pointer;
 }
 
 .animal-card:hover {
@@ -346,12 +346,12 @@ body {
 
 .animal-image {
     width: 100%;
-    height: 250px;
+    height: 220px; /* Было 250px */
     object-fit: cover;
 }
 
 .animal-info {
-    padding: 1.5rem;
+    padding: 1rem; /* Было 1.5rem */
 }
 
 .animal-header {
@@ -362,8 +362,9 @@ body {
 }
 
 .animal-name {
-    font-size: 1.5rem;
+    font-size: 1.25rem; /* Было 1.5rem */
     font-weight: bold;
+    margin: 0;
 }
 
 .animal-badge {
@@ -378,43 +379,44 @@ body {
 .animal-meta {
     color: var(--gray-600);
     margin-bottom: 0.5rem;
-}
-
-.animal-location {
-    color: var(--gray-600);
-    font-size: 0.875rem;
-    margin: 0.5rem 0;
-}
-
-.animal-location i {
-    margin-right: 0.25rem;
+    font-size: 0.9rem;
 }
 
 .animal-desc {
     color: var(--gray-600);
     margin-bottom: 1rem;
     line-height: 1.5;
+    font-size: 0.9rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Обрезаем описание до 2 строк */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .animal-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
+    gap: 0.5rem;
+}
+
+.btn-adopt,
+.btn-donate {
+    padding: 0.625rem; /* Было 0.75rem */
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .btn-adopt {
     background: var(--secondary);
     color: white;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
 }
 
 .btn-adopt:hover {
@@ -424,15 +426,6 @@ body {
 .btn-donate {
     background: var(--gray-100);
     color: var(--gray-600);
-    border: none;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .btn-donate:hover {
@@ -1472,10 +1465,10 @@ body {
     }
     
     .animals-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Было 300px */
+        gap: 1.5rem; /* Было 2rem */
     }
-    
     .animal-image {
         height: 200px;
     }

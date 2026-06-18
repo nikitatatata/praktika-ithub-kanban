@@ -112,12 +112,14 @@ function renderAnimals(animals) {
                     <p class="animal-desc">${animal.Description}</p>
                     <div class="animal-actions">
                         <div class="animal-actions">
+                        <div class="animal-actions">
                         <button class="btn-adopt" onclick="openAnimalModal(${animal.id})">
                             <i class="fa-solid fa-circle-info"></i> Подробнее
                         </button>
-                        <button class="btn-donate" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}')">
+                        <button class="btn-donate" onclick='showOwnerPhone(${JSON.stringify(animal)})'>
                             <i class="fa-solid fa-phone"></i> Связаться
                         </button>
+                    </div>
                     </div>
                     </div>
                 </div>
@@ -217,8 +219,8 @@ async function openAnimalModal(animalId) {
                         </div>
                     </div>
 
-                        <button class="btn-detail-secondary" onclick="openOwnerProfile(${animal.OwnerID || animal.UserID}, '${animal.Name}'); closeAnimalModal();">
-                             <i class="fa-solid fa-user"></i> Профиль владельца
+                        <button class="btn-detail-secondary" onclick='showOwnerPhone(${JSON.stringify(animal)}); closeAnimalModal();'>
+                            <i class="fa-solid fa-phone"></i> Связаться
                         </button>
                     </div>
                 </div>
