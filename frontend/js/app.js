@@ -334,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Проверка авторизации на главной странице
+// Проверка авторизации на главной странице
 function updateNavAuth() {
     const credentials = localStorage.getItem('userCredentials');
     const navActions = document.getElementById('navActions');
@@ -341,19 +342,18 @@ function updateNavAuth() {
     
     if (credentials) {
         // Пользователь авторизован
-        const user = JSON.parse(credentials);
         const userData = localStorage.getItem('userData');
         const profile = userData ? JSON.parse(userData) : null;
         const firstName = profile?.FirstName || profile?.firstname || '';
         const surname = profile?.Surname || profile?.surname || '';
-        const displayName = `${firstName} ${surname}`.trim() || 'Пользователь';
+        const displayName = `${firstName} ${surname}`.trim() || 'Личный кабинет';
         
         if (navActions) {
             navActions.innerHTML = `
                 <a href="dashboard.html" class="btn btn-outline">
                     <i class="fa-solid fa-user"></i> ${displayName}
                 </a>
-                <button onclick="logoutFromMain()" class="btn btn-primary" style="background: #dc2626;">
+                <button onclick="logoutFromMain()" class="btn btn-outline" style="color: #dc2626; border-color: #dc2626;">
                     <i class="fa-solid fa-right-from-bracket"></i> Выйти
                 </button>
             `;
@@ -364,7 +364,7 @@ function updateNavAuth() {
                 <a href="dashboard.html" class="btn btn-outline" onclick="closeMobileNav()">
                     <i class="fa-solid fa-user"></i> ${displayName}
                 </a>
-                <button onclick="logoutFromMain()" class="btn btn-primary" style="background: #dc2626; width: 100%;">
+                <button onclick="logoutFromMain()" class="btn btn-outline" style="color: #dc2626; border-color: #dc2626; width: 100%;">
                     <i class="fa-solid fa-right-from-bracket"></i> Выйти
                 </button>
             `;
@@ -385,6 +385,31 @@ function updateNavAuth() {
             `;
         }
     }
+}
+
+function logoutFromMain() {
+    if (confirm('Вы уверены, что хотите выйти из аккаунта?')) {
+        localStorage.removeItem('userCredentials');
+        localStorage.removeItem('userData');
+        updateNavAuth();
+        alert('Вы вышли из аккаунта');
+    }
+}
+
+// Обработчик кнопки "Разместить объявление"
+function handlePostAdClick() {
+    const credentials = localStorage.getItem('userCredentials');
+    
+    if (!credentials) {
+        // Не авторизован — предлагаем войти
+        if (confirm('Чтобы разместить объявление, нужно войти в аккаунт. Перейти на страницу входа?')) {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+    
+    // Авторизован — переходим в dashboard с параметром
+    window.location.href = 'dashboard.html?action=add-animal';
 }
 
 function logoutFromMain() {

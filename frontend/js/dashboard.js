@@ -117,12 +117,26 @@ let currentTab = 'dashboard';
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 
+// Инициализация
 document.addEventListener('DOMContentLoaded', async () => {
     if (!checkAuth()) return;
     
     renderMenu();
     await loadUserProfile();
     switchTab('dashboard');
+    
+    // Проверяем параметр URL для автооткрытия модалки
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'add-animal') {
+        // Небольшая задержка чтобы интерфейс успел отрисоваться
+        setTimeout(() => {
+            showAddAnimalModal();
+            // Убираем параметр из URL чтобы не открывалось повторно
+            window.history.replaceState({}, document.title, 'dashboard.html');
+        }, 500);
+    }
 });
 
 function renderMenu() {

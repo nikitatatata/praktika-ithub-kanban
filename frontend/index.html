@@ -99,44 +99,6 @@
         </div>
     </section>
 
-    
-    <!-- Секция "О нас" -->
-    <section class="about-section" id="about">
-        <div class="container">
-            <h2 class="section-title">О проекте «Лапы, крылья и хвосты»</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p>
-                        <strong>«Лапы, крылья и хвосты»</strong> — это единая платформа, которая объединяет 
-                        людей, желающих помочь животным. Мы создали пространство, где каждый может найти 
-                        нового друга, отдать животное в добрые руки или поддержать тех, кто нуждается в помощи.
-                    </p>
-                    <p>
-                        Наша миссия — сделать помощь животным простой, прозрачной и доступной. 
-                        Мы верим, что у каждого питомца должен быть дом, а у каждого человека — 
-                        возможность сделать доброе дело.
-                    </p>
-                    <div class="about-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">1000+</div>
-                            <div class="stat-label">Животных нашли дом</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">500+</div>
-                            <div class="stat-label">Активных пользователей</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">50+</div>
-                            <div class="stat-label">Успешных сборов</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="about-image">
-                    <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?auto=format&fit=crop&w=600&q=80" alt="О нас">
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- Секция призыва к действию -->
     <section class="cta-section">
@@ -144,7 +106,9 @@
             <h2>Готовы помочь?</h2>
             <p>Присоединяйтесь к нашему сообществу и измените чью-то жизнь к лучшему</p>
             <div class="cta-buttons">
-                <a href="register.html" class="btn btn-primary btn-lg">Создать аккаунт</a>
+                <button onclick="handlePostAdClick()" class="btn btn-secondary btn-lg">
+                    <i class="fa-solid fa-plus"></i> Разместить объявление
+                </button>
                 <a href="#animals" class="btn btn-outline btn-lg" style="border-color: white; color: white;">Посмотреть животных</a>
             </div>
         </div>
