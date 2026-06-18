@@ -108,8 +108,8 @@ const menuItems = [
     { id: 'my-animals', icon: 'fa-paw', label: 'Мои животные' },
     { id: 'my-fundraisers', icon: 'fa-bullhorn', label: 'Мои сборы' },
     { id: 'my-donations', icon: 'fa-receipt', label: 'Мои донаты' },
-    { id: 'search', icon: 'fa-magnifying-glass', label: 'Поиск' },
-    { id: 'all-fundraisers', icon: 'fa-hand-holding-dollar', label: 'Все сборы' }
+    { id: 'search', icon: 'fa-magnifying-glass', label: 'Найти питомца' },
+    { id: 'all-fundraisers', icon: 'fa-hand-holding-dollar', label: 'Найти сбор' }
 ];
 
 let currentTab = 'dashboard';
