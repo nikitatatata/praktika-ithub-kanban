@@ -816,8 +816,8 @@ function renderProfile(content) {
     const profile = API.storage.getUserData() || {};
     
     const firstName = getField(profile, 'FirstName', 'firstname');
-    const surname = getField(profile, 'SurName', 'surname');
-    const lastname = getField(profile, 'LastName', 'lastname');
+    const surName = getField(profile, 'SurName', 'surname');
+    const lastName = getField(profile, 'LastName', 'lastname');
     const phone = getField(profile, 'Phone', 'phone');
     const location = getField(profile, 'Location', 'location');
     const description = getField(profile, 'Description', 'description');
@@ -832,11 +832,11 @@ function renderProfile(content) {
                 </div>
                 <div class="form-group">
                     <label>Отчество</label>
-                    <input type="text" id="profileLastname" value="${lastname}">
+                    <input type="text" id="profileLastname" value="${lastName}">
                 </div>
                 <div class="form-group">
                     <label>Фамилия *</label>
-                    <input type="text" id="profileSurname" value="${surname}" required>
+                    <input type="text" id="profileSurname" value="${surName}" required>
                 </div>
                 <div class="form-group">
                     <label>Телефон *</label>
