@@ -47,27 +47,27 @@ async function loadUserProfile(forceRefresh = false) {
         
         // Получаем все возможные варианты написания полей
         const firstName = profile.FirstName || profile.firstname || profile.firstName || '';
-        const surname = profile.Surname || profile.surname || profile.lastName || '';
-        const lastname = profile.Lastname || profile.lastname || profile.middleName || '';
+        const surName = profile.SurName || profile.surname || profile.lastName || '';
+        const lastName = profile.LastName || profile.lastname || profile.lastName || '';
         const phone = profile.Phone || profile.phone || '';
         const location = profile.Location || profile.location || '';
         const description = profile.Description || profile.description || '';
         
         console.log('👤 Обработанные данные:', { 
             firstName, 
-            surname, 
-            lastname, 
+            surName, 
+            lastName, 
             phone, 
             location, 
             description 
         });
         
         // Обновляем боковое меню
-        const shortName = `${firstName} ${surname}`.trim() || 'Пользователь';
+        const shortName = `${firstName} ${surName}`.trim() || 'Пользователь';
         document.getElementById('userName').textContent = shortName;
         document.getElementById('userRole').textContent = description || 'Пользователь';
         
-        const initials = (firstName[0] || '') + (surname[0] || '');
+        const initials = (firstName[0] || '') + (surName[0] || '');
         document.getElementById('userAvatar').textContent = initials || 'П';
         
         // Если мы на вкладке профиля — обновляем форму
@@ -83,8 +83,8 @@ async function loadUserProfile(forceRefresh = false) {
             };
             
             setVal('profileFirstname', firstName);
-            setVal('profileLastname', lastname);  // Отчество
-            setVal('profileSurname', surname);     // Фамилия
+            setVal('profileLastname', lastName);  // Отчество
+            setVal('profileSurname', surName);     // Фамилия
             setVal('profilePhone', phone);
             setVal('profileLocation', location);
             setVal('profileDescription', description);
@@ -1485,14 +1485,14 @@ function closeOwnerProfileModal() {
 
 function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {
     const firstName = profile.FirstName || profile.firstname || '';
-    const surname = profile.SurName || profile.surname || '';
-    const lastname = profile.LastName || profile.lastname || '';
+    const surName = profile.SurName || profile.surname || '';
+    const lastName = profile.LastName || profile.lastname || '';
     const phone = profile.Phone || profile.phone || '';
     const location = profile.Location || profile.location || '';
     const description = profile.Description || profile.description || '';
     const email = profile.Email || profile.email || '';
     
-    const fullName = `${firstName} ${lastname} ${surname}`.trim();
+    const fullName = `${firstName} ${lastName} ${surName}`.trim();
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay active';
@@ -1507,7 +1507,7 @@ function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {
             <div style="padding: 2rem;">
                 <div style="text-align: center; margin-bottom: 2rem;">
                     <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 2.5rem; font-weight: bold;">
-                        ${firstName[0] || 'П'}${surname[0] || ''}
+                        ${firstName[0] || 'П'}${surName[0] || ''}
                     </div>
                     <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">${fullName}</h2>
                     ${location ? `<p style="color: var(--gray-600);"><i class="fa-solid fa-location-dot"></i> ${location}</p>` : ''}
