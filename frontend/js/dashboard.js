@@ -450,7 +450,7 @@ async function renderMyFundraisers(content, userId) {
             ${myFundraisers.length > 0 ? `
                 <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
                     ${myFundraisers.map(f => {
-                        const collected = f.CollectedAmount || 0;
+                        const collected = f.CurrentAmount || 0;
                         const goal = f.TargetAmount || 0;
                         const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
                         
@@ -539,7 +539,7 @@ async function renderAllFundraisers(content) {
             <h2 class="card-title" style="margin-bottom: 1.5rem;">Все активные сборы</h2>
             <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
                 ${othersFundraisers.length > 0 ? othersFundraisers.map(f => {
-                    const collected = f.CollectedAmount || 0;
+                    const collected = f.CurrentAmount || 0;
                     const goal = f.TargetAmount || 0;
                     const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
                     
@@ -1549,7 +1549,7 @@ function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {
                         <h3 style="margin-bottom: 1rem; color: var(--gray-800);"><i class="fa-solid fa-hand-holding-dollar"></i> Сбор средств (${fundraisers.length})</h3>
                         <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
                             ${fundraisers.map(f => {
-                                const collected = f.CollectedAmount || 0;
+                                const collected = f.CurrentAmount || 0;
                                 const goal = f.TargetAmount || 0;
                                 const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
                                 
