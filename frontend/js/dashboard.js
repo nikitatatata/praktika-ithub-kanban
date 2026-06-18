@@ -1405,14 +1405,14 @@ async function showOwnerProfile(animal) {
         const owner = await response.json();
         
         const firstName = owner.FirstName || owner.firstname || '';
-        const surname = owner.Surname || owner.surname || '';
-        const lastname = owner.Lastname || owner.lastname || '';
+        const surName = owner.SurName || owner.surname || '';
+        const lastName = owner.LastName || owner.lastname || '';
         const phone = owner.Phone || owner.phone || '';
         const location = owner.Location || owner.location || '';
         const description = owner.Description || owner.description || '';
         
-        const fullName = `${firstName} ${lastname} ${surname}`.trim() || 'Владелец';
-        const initials = (firstName[0] || '') + (surname[0] || '');
+        const fullName = `${firstName} ${lastName} ${surName}`.trim() || 'Владелец';
+        const initials = (firstName[0] || '') + (surName[0] || '');
         
         const modal = document.createElement('div');
         modal.className = 'modal-overlay active';
@@ -1485,8 +1485,8 @@ function closeOwnerProfileModal() {
 
 function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {
     const firstName = profile.FirstName || profile.firstname || '';
-    const surname = profile.Surname || profile.surname || '';
-    const lastname = profile.Lastname || profile.lastname || '';
+    const surname = profile.SurName || profile.surname || '';
+    const lastname = profile.LastName || profile.lastname || '';
     const phone = profile.Phone || profile.phone || '';
     const location = profile.Location || profile.location || '';
     const description = profile.Description || profile.description || '';
