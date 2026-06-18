@@ -44,7 +44,7 @@ body::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-image: url('../images/fon.jpg');
+    background-image: url('../fon.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
