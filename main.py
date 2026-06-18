@@ -1,8 +1,25 @@
+import logging
+from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI, Response, UploadFile, File, Form, Query
 from fastapi.staticfiles import StaticFiles
 from commands import *
 import shutil
 from pathlib import Path
+
+# 1. Настройка логгера
+logger = logging.getLogger("fastapi_app")
+logger.setLevel(logging.INFO)
+
+# 2. Файловый обработчик (макс. 5 МБ, хранение 3 старых файлов)
+file_handler = RotatingFileHandler(
+    "app.log", maxBytes=5*1024*1024, backupCount=3, encoding="utf-8"
+)
+formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+file_handler.setFormatter(formatter)
+
+# 3. Добавляем обработчик к логгеру приложения и Uvicorn (для логов HTTP-запросов)
+logger.addHandler(file_handler)
+logging.getLogger("uvicorn").addHandler(file_handler)
 
 # add_User("teto@teto.teto", "3t62gd7d2387", "nik", "tar", "admin", "serg", "Касане тето", "Москва")
 # print(validate_User("teto@teto.teto", "3t62gd7d2387"))
