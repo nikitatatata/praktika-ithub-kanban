@@ -379,15 +379,16 @@ async function renderMyAnimals(content, userId) {
                                     <td>${animal.OrientatedAge} лет</td>
                                     <td>${animal.Cost > 0 ? animal.Cost + ' ₽' : 'Бесплатно'}</td>
                                     <td>
-                                        <div class="animal-actions">
-                                        <div class="animal-actions">
-                                        <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
-                                            <i class="fa-solid fa-circle-info"></i> Подробнее
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.25rem;" onclick="openAnimalDetailModal(${animal.id})">
+                                            <i class="fa-solid fa-eye"></i>
                                         </button>
-                                        <button class="btn-donate" onclick='showOwnerPhone(${JSON.stringify(animal)})'>
-                                            <i class="fa-solid fa-phone"></i> Связаться
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin-right: 0.25rem;" onclick='showOwnerProfile(${JSON.stringify(animal)})'>
+                                            <i class="fa-solid fa-phone"></i>
                                         </button>
-                                    </div>
+                                        <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteAnimal(${animal.id})">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
                                     </div>
                                     </td>
                                 </tr>
@@ -773,14 +774,13 @@ async function renderSearch(content) {
                                 <p class="animal-meta">${animal.Breed}, ${animal.OrientatedAge} лет</p>
                                 <p class="animal-desc">${animal.Description}</p>
                                 <div class="animal-actions">
-                                    <div class="animal-actions">
-                                    <div class="animal-actions">
                                     <button class="btn-adopt" onclick="openAnimalDetailModal(${animal.id})">
                                         <i class="fa-solid fa-circle-info"></i> Подробнее
                                     </button>
-                                    <button class="btn-donate" onclick='showOwnerPhone(${JSON.stringify(animal)})'>
+                                    <button class="btn-donate" onclick='showOwnerProfile(${JSON.stringify(animal)})'>
                                         <i class="fa-solid fa-phone"></i> Связаться
                                     </button>
+                                </div>
                                 </div>
                                 </div>
                                 </div>
@@ -1277,7 +1277,7 @@ async function openAnimalDetailModal(animalId) {
                     </div>
 
                     <div class="animal-detail-actions">
-                    <button class="btn-detail-secondary" onclick='showOwnerPhone(${JSON.stringify(animal)}); closeAnimalModal();'>
+                    <button class="btn-detail-secondary" onclick='showOwnerProfile(${JSON.stringify(animal)}); closeAnimalDetailModal();'>
                         <i class="fa-solid fa-phone"></i> Связаться
                     </button>
                     </div>
@@ -1364,14 +1364,100 @@ window.debugProfile = async function() {
 
 // ==================== ПРОСМОТР ПРОФИЛЯ ВЛАДЕЛЬЦА ====================
 
-// Показ телефона владельца
-function showOwnerPhone(animal) {
-    const phone = animal.OwnerPhone || animal.Phone || 'Недоступен';
-    const ownerName = animal.OwnerName || animal.OwnerFirstName 
-        ? `${animal.OwnerFirstName || ''} ${animal.OwnerSurname || ''}`.trim() 
-        : 'Владелец';
+async function showOwnerProfile(animal) {
+    const ownerId = animal.OwnerID;
     
-    alert(`📞 Контактная информация:\n\n${ownerName}\nТелефон: ${phone}`);
+    if (!ownerId) {
+        alert('Информация о владельце недоступна');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/user/${ownerId}`);
+        
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить данные владельца');
+        }
+        
+        const owner = await response.json();
+        
+        const firstName = owner.FirstName || owner.firstname || '';
+        const surname = owner.Surname || owner.surname || '';
+        const lastname = owner.Lastname || owner.lastname || '';
+        const phone = owner.Phone || owner.phone || '';
+        const location = owner.Location || owner.location || '';
+        const description = owner.Description || owner.description || '';
+        
+        const fullName = `${firstName} ${lastname} ${surname}`.trim() || 'Владелец';
+        const initials = (firstName[0] || '') + (surname[0] || '');
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay active';
+        modal.id = 'ownerProfileModal';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 450px;">
+                <button class="modal-close" onclick="closeOwnerProfileModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div style="padding: 2rem; text-align: center;">
+                    <div style="width: 90px; height: 90px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 2rem; font-weight: bold;">
+                        ${initials || 'П'}
+                    </div>
+                    <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem;">${fullName}</h2>
+                    ${location ? `<p style="color: var(--gray-600); margin-bottom: 1.5rem;"><i class="fa-solid fa-location-dot"></i> ${location}</p>` : '<div style="margin-bottom: 1.5rem;"></div>'}
+                    
+                    <div style="background: var(--gray-50); padding: 1.25rem; border-radius: 0.75rem; text-align: left;">
+                        <h3 style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Контактная информация</h3>
+                        
+                        ${phone ? `
+                            <a href="tel:${phone}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 0.5rem; margin-bottom: 0.5rem; text-decoration: none; color: var(--gray-800); transition: all 0.3s;">
+                                <i class="fa-solid fa-phone" style="color: var(--primary); font-size: 1.1rem;"></i>
+                                <span style="font-weight: 600;">${phone}</span>
+                            </a>
+                        ` : '<p style="color: var(--gray-500); font-size: 0.875rem; padding: 0.5rem;">Телефон не указан</p>'}
+                        
+                        ${owner.Email ? `
+                            <a href="mailto:${owner.Email}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: white; border-radius: 0.5rem; text-decoration: none; color: var(--gray-800); transition: all 0.3s;">
+                                <i class="fa-solid fa-envelope" style="color: var(--secondary); font-size: 1.1rem;"></i>
+                                <span style="font-weight: 600; font-size: 0.9rem;">${owner.Email}</span>
+                            </a>
+                        ` : ''}
+                    </div>
+                    
+                    ${description ? `
+                        <div style="margin-top: 1rem; padding: 1rem; background: var(--gray-50); border-radius: 0.75rem; text-align: left;">
+                            <h3 style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">О себе</h3>
+                            <p style="color: var(--gray-700); font-size: 0.9rem; line-height: 1.5; margin: 0;">${description}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div style="margin-top: 1.5rem; padding: 0.75rem; background: #dbeafe; border-radius: 0.5rem; font-size: 0.875rem; color: #1e40af;">
+                        <i class="fa-solid fa-paw"></i> Владелец животного "<strong>${animal.Name}</strong>"
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeOwnerProfileModal();
+        });
+        
+    } catch (error) {
+        console.error('Ошибка загрузки профиля:', error);
+        alert('Не удалось получить контактные данные владельца');
+    }
+}
+
+function closeOwnerProfileModal() {
+    const modal = document.getElementById('ownerProfileModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
 }
 
 function showOwnerProfileModal(profile, animals, fundraisers, animalName = '') {
