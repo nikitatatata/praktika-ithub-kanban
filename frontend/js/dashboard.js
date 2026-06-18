@@ -412,111 +412,149 @@ function renderFavorites(content) {
 
 async function renderFundraisers(content) {
     console.log('💰 Загрузка сборов...');
-    const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
-    console.log(' Получено сборов:', fundraisers.length);
     
-    // Сортируем по дате (новые сверху)
-    fundraisers.sort((a, b) => {
-        const dateA = new Date(a.CreatedAt || 0);
-        const dateB = new Date(b.CreatedAt || 0);
-        return dateB - dateA;
-    });
-    
-    content.innerHTML = `
-        <h2 class="card-title" style="margin-bottom: 1.5rem;">Активные сборы средств</h2>
-        <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
-            ${fundraisers.length > 0 ? fundraisers.map(f => {
-                const collected = f.CollectedAmount || 0;
-                const goal = f.TargetAmount || 0;
-                const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
-                
-                return `
-                    <div class="fundraiser-card">
-                        <img src="${f.ImagePath || 'https://via.placeholder.com/500x300?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image">
-                        <div class="fundraiser-info">
-                            <h3 class="fundraiser-title">${f.Title}</h3>
-                            <p class="fundraiser-desc">${f.Description}</p>
-                            
-                            <div class="fundraiser-progress">
-                                <div class="fundraiser-meta">
-                                    <span style="font-weight: 600; color: var(--secondary);">${collected} ₽</span>
-                                    <span style="color: var(--gray-600);">из ${goal} ₽</span>
+    try {
+        // Проверяем, доступен ли API
+        if (!API || !API.FundraiserAPI) {
+            throw new Error('API.FundraiserAPI не доступен. Проверьте подключение api.js');
+        }
+        
+        const fundraisers = await API.FundraiserAPI.getAll({ limit: 100 });
+        console.log('📦 Получено сборов:', fundraisers.length);
+        
+        // Сортируем по дате (новые сверху)
+        fundraisers.sort((a, b) => {
+            const dateA = new Date(a.CreatedAt || 0);
+            const dateB = new Date(b.CreatedAt || 0);
+            return dateB - dateA;
+        });
+        
+        content.innerHTML = `
+            <h2 class="card-title" style="margin-bottom: 1.5rem;">Активные сборы средств</h2>
+            <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+                ${fundraisers.length > 0 ? fundraisers.map(f => {
+                    const collected = f.CollectedAmount || 0;
+                    const goal = f.TargetAmount || 0;
+                    const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
+                    
+                    return `
+                        <div class="fundraiser-card">
+                            <img src="${f.ImagePath || 'https://via.placeholder.com/500x300?text=Нет+фото'}" alt="${f.Title}" class="fundraiser-image">
+                            <div class="fundraiser-info">
+                                <h3 class="fundraiser-title">${f.Title}</h3>
+                                <p class="fundraiser-desc">${f.Description}</p>
+                                
+                                <div class="fundraiser-progress">
+                                    <div class="fundraiser-meta">
+                                        <span style="font-weight: 600; color: var(--secondary);">${collected} ₽</span>
+                                        <span style="color: var(--gray-600);">из ${goal} ₽</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: ${percent}%;"></div>
+                                    </div>
+                                    <div style="text-align: right; font-size: 0.875rem; font-weight: 600; color: var(--secondary);">
+                                        ${percent}% собрано
+                                    </div>
                                 </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${percent}%;"></div>
+                                
+                                ${f.AnimalID ? `<a href="#" onclick="openAnimalDetailModal(${f.AnimalID}); return false;" class="fundraiser-animal-link">
+                                    <i class="fa-solid fa-paw"></i> Посмотреть животное
+                                </a>` : ''}
+                                
+                                <div class="donate-input-group">
+                                    <input type="number" id="donateAmount_${f.id}" placeholder="Сумма в ₽" min="1">
+                                    <button class="btn btn-primary" onclick="makeDonation(${f.id})">
+                                        <i class="fa-solid fa-heart"></i> Помочь
+                                    </button>
                                 </div>
-                                <div style="text-align: right; font-size: 0.875rem; font-weight: 600; color: var(--secondary);">
-                                    ${percent}% собрано
+                                <div class="quick-amounts">
+                                    <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 100)">100 ₽</button>
+                                    <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 300)">300 ₽</button>
+                                    <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 500)">500 ₽</button>
+                                    <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 1000)">1000 ₽</button>
                                 </div>
-                            </div>
-                            
-                            ${f.AnimalID ? `<a href="#" onclick="openAnimalDetailModal(${f.AnimalID}); return false;" class="fundraiser-animal-link">
-                                <i class="fa-solid fa-paw"></i> Посмотреть животное
-                            </a>` : ''}
-                            
-                            <div class="donate-input-group">
-                                <input type="number" id="donateAmount_${f.id}" placeholder="Сумма в ₽" min="1">
-                                <button class="btn btn-primary" onclick="makeDonation(${f.id})">
-                                    <i class="fa-solid fa-heart"></i> Помочь
-                                </button>
-                            </div>
-                            <div class="quick-amounts">
-                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 100)">100 ₽</button>
-                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 300)">300 ₽</button>
-                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 500)">500 ₽</button>
-                                <button class="quick-amount-btn" onclick="setDonateAmount(${f.id}, 1000)">1000 ₽</button>
                             </div>
                         </div>
-                    </div>
-                `;
-            }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>'}
-        </div>
-    `;
+                    `;
+                }).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Пока нет активных сборов</p>'}
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ Ошибка загрузки сборов:', error);
+        content.innerHTML = `
+            <div class="card">
+                <h2 class="card-title" style="color: #dc2626;">Ошибка загрузки</h2>
+                <p>${error.message}</p>
+                <button class="btn btn-primary" onclick="switchTab('fundraisers')" style="margin-top: 1rem;">
+                    <i class="fa-solid fa-rotate-right"></i> Повторить
+                </button>
+            </div>
+        `;
+    }
 }
 
 // ==================== ВКЛАДКА: МОИ ДОНАТЫ ====================
 
 async function renderMyDonations(content, userId) {
-    console.log('🧾 Загрузка моих донатов...');
-    const donations = await API.FundraiserAPI.getUserDonations(userId);
-    console.log('📦 Получено донатов:', donations.length);
+    console.log(' Загрузка моих донатов...');
     
-    const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
-    
-    content.innerHTML = `
-        <div class="stats-grid">
-            <div class="stat-card" style="border-left-color: #f97316;">
-                <h3>Всего пожертвовано</h3>
-                <div class="value">${totalAmount} ₽</div>
+    try {
+        // Проверяем, доступен ли API
+        if (!API || !API.FundraiserAPI) {
+            throw new Error('API.FundraiserAPI не доступен. Проверьте подключение api.js');
+        }
+        
+        const donations = await API.FundraiserAPI.getUserDonations(userId);
+        console.log('📦 Получено донатов:', donations.length);
+        
+        const totalAmount = donations.reduce((sum, d) => sum + (d.Amount || 0), 0);
+        
+        content.innerHTML = `
+            <div class="stats-grid">
+                <div class="stat-card" style="border-left-color: #f97316;">
+                    <h3>Всего пожертвовано</h3>
+                    <div class="value">${totalAmount} ₽</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #10b981;">
+                    <h3>Количество донатов</h3>
+                    <div class="value">${donations.length}</div>
+                </div>
             </div>
-            <div class="stat-card" style="border-left-color: #10b981;">
-                <h3>Количество донатов</h3>
-                <div class="value">${donations.length}</div>
-            </div>
-        </div>
 
-        <h2 class="card-title" style="margin-bottom: 1.5rem;">История моих пожертвований</h2>
-        <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
-            ${donations.length > 0 ? donations.map(d => `
-                <div class="fundraiser-card">
-                    <div class="fundraiser-info">
-                        <h3 class="fundraiser-title">Сбор #${d.FundraiserID || d.id || '?'}</h3>
-                        <div style="font-size: 2rem; font-weight: bold; color: var(--primary); margin: 1rem 0;">
-                            ${d.Amount} ₽
-                        </div>
-                        <div style="color: var(--gray-600); font-size: 0.875rem;">
-                            <i class="fa-regular fa-calendar"></i> 
-                            ${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            }) : 'Дата неизвестна'}
+            <h2 class="card-title" style="margin-bottom: 1.5rem;">История моих пожертвований</h2>
+            <div class="animals-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                ${donations.length > 0 ? donations.map(d => `
+                    <div class="fundraiser-card">
+                        <div class="fundraiser-info">
+                            <h3 class="fundraiser-title">Сбор #${d.FundraiserID || d.id || '?'}</h3>
+                            <div style="font-size: 2rem; font-weight: bold; color: var(--primary); margin: 1rem 0;">
+                                ${d.Amount} ₽
+                            </div>
+                            <div style="color: var(--gray-600); font-size: 0.875rem;">
+                                <i class="fa-regular fa-calendar"></i> 
+                                ${d.CreatedAt ? new Date(d.CreatedAt).toLocaleDateString('ru-RU', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                }) : 'Дата неизвестна'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
-        </div>
-    `;
+                `).join('') : '<p style="text-align: center; padding: 2rem; color: var(--gray-600);">Вы ещё не делали пожертвований</p>'}
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ Ошибка загрузки донатов:', error);
+        content.innerHTML = `
+            <div class="card">
+                <h2 class="card-title" style="color: #dc2626;">Ошибка загрузки</h2>
+                <p>${error.message}</p>
+                <button class="btn btn-primary" onclick="switchTab('my-donations')" style="margin-top: 1rem;">
+                    <i class="fa-solid fa-rotate-right"></i> Повторить
+                </button>
+            </div>
+        `;
+    }
 }
 
 // ==================== ВКЛАДКА: ПОИСК ====================

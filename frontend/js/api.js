@@ -479,7 +479,7 @@ window.API = {
     Auth: AuthAPI,
     User: UserAPI,
     Animal: AnimalAPI,
-    Fundraiser: FundraiserAPI,
+    FundraiserAPI: FundraiserAPI,  // ← Убедитесь что эта строка есть!
     storage: storage,
     hashPassword: hashPassword
 };
