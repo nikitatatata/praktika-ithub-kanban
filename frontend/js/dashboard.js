@@ -1177,10 +1177,6 @@ function showAddFundraiserModal() {
                         <input type="number" id="fundraiserTarget" required min="100">
                     </div>
                     <div class="form-group">
-                        <label>ID животного (если есть)</label>
-                        <input type="number" id="fundraiserAnimalId" min="1">
-                    </div>
-                    <div class="form-group">
                         <label>Описание *</label>
                         <textarea id="fundraiserDescription" rows="4" required></textarea>
                     </div>
@@ -1212,9 +1208,6 @@ function showAddFundraiserModal() {
             title: document.getElementById('fundraiserTitle').value,
             targetAmount: parseInt(document.getElementById('fundraiserTarget').value),
             description: document.getElementById('fundraiserDescription').value,
-            animalId: document.getElementById('fundraiserAnimalId').value 
-                ? parseInt(document.getElementById('fundraiserAnimalId').value) 
-                : null
         };
         
         const imageFile = document.getElementById('fundraiserImage').files[0];
