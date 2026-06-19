@@ -447,7 +447,7 @@ async function loadFundraisers() {
         }
         
         grid.innerHTML = list.map(f => {
-            const collected = f.CollectedAmount || 0;
+            const collected = f.CurrentAmount || 0;
             const goal = f.TargetAmount || 0;
             const percent = goal > 0 ? Math.min(100, Math.round((collected / goal) * 100)) : 0;
             
